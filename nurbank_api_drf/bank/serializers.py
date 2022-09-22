@@ -10,7 +10,7 @@ class RegistrationSerializer(ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
-class UserOutputSerializer(ModelSerializer):
+class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ["first_name", "last_name", "username", "debt"]
@@ -19,10 +19,22 @@ class UserOutputSerializer(ModelSerializer):
 class UserChangeSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "password"]
+        fields = ["first_name", "last_name"]
 
 
 class UserAdminSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
+
+
+class ApplicationSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
+
+
+# class ApplicationCreateSerializer(ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = "__all__"

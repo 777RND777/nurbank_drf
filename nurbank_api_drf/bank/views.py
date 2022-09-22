@@ -5,10 +5,11 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import User
+from .models import Application, User
 from .serializers import (RegistrationSerializer,
                           UserAdminSerializer,
-                          UserChangeSerializer, UserOutputSerializer)
+                          UserChangeSerializer, UserSerializer,
+                          ApplicationSerializer)
 
 
 @api_view(['POST'])
@@ -20,6 +21,21 @@ def register_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserDetail(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(self.request.user)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        serializer = UserChangeSerializer(self.request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def user_list_view(request):
@@ -28,7 +44,9 @@ def user_list_view(request):
     return Response(serializer.data)
 
 
-class UserDetail(APIView):
+class AdminUserDetail(APIView):
+    permission_classes = [IsAdminUser]
+
     @staticmethod
     def get_object(slug):
         try:
@@ -36,33 +54,28 @@ class UserDetail(APIView):
         except User.DoesNotExist:
             raise Http404
 
-    @permission_classes([IsAuthenticated])
     def get(self, request, slug):
         user = self.get_object(slug)
-        if self.request.user.is_superuser:
-            serializer = UserAdminSerializer(user)
-        elif self.request.user.pk == user.pk:
-            serializer = UserOutputSerializer(user)
-        else:
-            raise Http404
+        serializer = UserAdminSerializer(user)
         return Response(serializer.data)
 
-    @permission_classes([IsAuthenticated])
-    def put(self, request, slug):
+    def patch(self, request, slug):
         user = self.get_object(slug)
-        if self.request.user.is_superuser:
-            serializer = UserAdminSerializer(user, data=request.data)
-        elif self.request.user.pk == user.pk:
-            serializer = UserChangeSerializer(user, data=request.data)
-        else:
-            raise Http404
+        serializer = UserAdminSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsAdminUser])
     def delete(self, request, slug):
         user = self.get_object(slug)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def user_application_list_view(request, slug):
+#     application = Application.objects.filter(user__slug=slug).order_by('-request_date')
+#     serializer = ApplicationSerializer(application, many=True)
+#     return Response(serializer.data)
