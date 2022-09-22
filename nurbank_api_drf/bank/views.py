@@ -30,35 +30,39 @@ def user_list_view(request):
 
 class UserDetail(APIView):
     @staticmethod
-    def get_object(pk):
+    def get_object(slug):
         try:
-            return User.objects.get(pk=pk)
+            return User.objects.get(slug=slug)
         except User.DoesNotExist:
             raise Http404
 
     @permission_classes([IsAuthenticated])
-    def get(self, request, pk):
-        user = self.get_object(pk)
+    def get(self, request, slug):
+        user = self.get_object(slug)
         if self.request.user.is_superuser:
             serializer = UserAdminSerializer(user)
-        else:
+        elif self.request.user.pk == user.pk:
             serializer = UserOutputSerializer(user)
+        else:
+            raise Http404
         return Response(serializer.data)
 
     @permission_classes([IsAuthenticated])
-    def put(self, request, pk):
-        user = self.get_object(pk)
+    def put(self, request, slug):
+        user = self.get_object(slug)
         if self.request.user.is_superuser:
             serializer = UserAdminSerializer(user, data=request.data)
-        else:
+        elif self.request.user.pk == user.pk:
             serializer = UserChangeSerializer(user, data=request.data)
+        else:
+            raise Http404
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @permission_classes([IsAdminUser])
-    def delete(self, request, pk):
-        user = self.get_object(pk)
+    def delete(self, request, slug):
+        user = self.get_object(slug)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
