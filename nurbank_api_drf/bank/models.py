@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.text import slugify
@@ -9,6 +10,7 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.username)
+        self.password = make_password(self.password)
         super().save(*args, **kwargs)
 
     def __str__(self):
