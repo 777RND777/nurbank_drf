@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from .models import User
+from .models import Application, User
 
 
 class RegistrationSerializer(ModelSerializer):
@@ -30,11 +30,11 @@ class UserAdminSerializer(ModelSerializer):
 
 class ApplicationSerializer(ModelSerializer):
     class Meta:
-        model = User
+        model = Application
         fields = "__all__"
 
 
-# class ApplicationCreateSerializer(ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = "__all__"
+class ApplicationCreateSerializer(ModelSerializer):
+    class Meta:
+        model = Application
+        fields = ["value"]

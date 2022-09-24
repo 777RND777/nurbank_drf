@@ -9,7 +9,7 @@ from .models import Application, User
 from .serializers import (RegistrationSerializer,
                           UserAdminSerializer,
                           UserChangeSerializer, UserSerializer,
-                          ApplicationSerializer)
+                          ApplicationCreateSerializer, ApplicationSerializer)
 
 
 @api_view(['POST'])
@@ -36,6 +36,32 @@ class UserDetail(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ApplicationList(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ApplicationCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=self.request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        applications = self.request.user.applications
+        serializer = ApplicationSerializer(applications, many=True)
+        return Response(serializer.data)
+
+
+class AdminApplicationList(APIView):
+    permission_classes = [IsAdminUser]
+
+    @staticmethod
+    def get(request):
+        applications = Application.objects.all()
+        serializer = ApplicationSerializer(applications, many=True)
+        return Response(serializer.data)
+
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def user_list_view(request):
@@ -44,7 +70,7 @@ def user_list_view(request):
     return Response(serializer.data)
 
 
-class AdminUserDetail(APIView):
+class AdminUserMixin(APIView):
     permission_classes = [IsAdminUser]
 
     @staticmethod
@@ -54,6 +80,8 @@ class AdminUserDetail(APIView):
         except User.DoesNotExist:
             raise Http404
 
+
+class AdminUserDetail(AdminUserMixin):
     def get(self, request, slug):
         user = self.get_object(slug)
         serializer = UserAdminSerializer(user)
@@ -73,9 +101,9 @@ class AdminUserDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def user_application_list_view(request, slug):
-#     application = Application.objects.filter(user__slug=slug).order_by('-request_date')
-#     serializer = ApplicationSerializer(application, many=True)
-#     return Response(serializer.data)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_application_list_view(request, slug):
+    applications = Application.objects.filter(user__slug=slug)
+    serializer = ApplicationSerializer(applications, many=True)
+    return Response(serializer.data)
