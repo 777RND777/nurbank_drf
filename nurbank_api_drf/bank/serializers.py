@@ -31,13 +31,16 @@ class AdminUserSerializer(ModelSerializer):
 class ApplicationSerializer(ModelSerializer):
     class Meta:
         model = Application
-        fields = ["id", "value", "request_date", "answer_date", "approved"]
+        fields = ["value", "request_date", "answer_date", "approved"]
 
 
 class ApplicationCreateSerializer(ModelSerializer):
     class Meta:
         model = Application
-        fields = ["value"]
+        fields = ["value", "request_date"]
+        extra_kwargs = {
+            'value': {'required': True},
+        }
 
 
 class AdminApplicationSerializer(ModelSerializer):
@@ -46,8 +49,11 @@ class AdminApplicationSerializer(ModelSerializer):
         fields = "__all__"
 
 
-# TODO deal with serializers
 class AdminApplicationCreateSerializer(ModelSerializer):
     class Meta:
         model = Application
-        fields = ["value", "user_id"]
+        fields = "__all__"
+        extra_kwargs = {
+            'value': {'required': True},
+            'user_id': {'required': True},
+        }
