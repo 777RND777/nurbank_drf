@@ -7,8 +7,9 @@ from rest_framework.views import APIView
 
 from .models import Application, User
 from .serializers import (RegistrationSerializer,
-                          UserAdminSerializer,
+                          AdminUserSerializer,
                           UserChangeSerializer, UserSerializer,
+                          AdminApplicationCreateSerializer, AdminApplicationSerializer,
                           ApplicationCreateSerializer, ApplicationSerializer)
 
 
@@ -56,9 +57,17 @@ class AdminApplicationList(APIView):
     permission_classes = [IsAdminUser]
 
     @staticmethod
+    def post(request):
+        serializer = AdminApplicationCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @staticmethod
     def get(request):
         applications = Application.objects.all()
-        serializer = ApplicationSerializer(applications, many=True)
+        serializer = AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
 
 
@@ -66,7 +75,7 @@ class AdminApplicationList(APIView):
 @permission_classes([IsAdminUser])
 def user_list_view(request):
     user = User.objects.all().order_by('-date_joined')
-    serializer = UserAdminSerializer(user, many=True)
+    serializer = AdminUserSerializer(user, many=True)
     return Response(serializer.data)
 
 
@@ -84,12 +93,12 @@ class AdminUserMixin(APIView):
 class AdminUserDetail(AdminUserMixin):
     def get(self, request, slug):
         user = self.get_object(slug)
-        serializer = UserAdminSerializer(user)
+        serializer = AdminUserSerializer(user)
         return Response(serializer.data)
 
     def patch(self, request, slug):
         user = self.get_object(slug)
-        serializer = UserAdminSerializer(user, data=request.data, partial=True)
+        serializer = AdminUserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

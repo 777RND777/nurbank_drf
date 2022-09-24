@@ -22,7 +22,7 @@ class UserChangeSerializer(ModelSerializer):
         fields = ["first_name", "last_name"]
 
 
-class UserAdminSerializer(ModelSerializer):
+class AdminUserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
@@ -31,10 +31,22 @@ class UserAdminSerializer(ModelSerializer):
 class ApplicationSerializer(ModelSerializer):
     class Meta:
         model = Application
-        fields = "__all__"
+        fields = ["id", "value", "request_date", "answer_date", "approved"]
 
 
 class ApplicationCreateSerializer(ModelSerializer):
     class Meta:
         model = Application
         fields = ["value"]
+
+
+class AdminApplicationSerializer(ModelSerializer):
+    class Meta:
+        model = Application
+        fields = "__all__"
+
+
+class AdminApplicationCreateSerializer(ModelSerializer):
+    class Meta:
+        model = Application
+        fields = "__all__"
