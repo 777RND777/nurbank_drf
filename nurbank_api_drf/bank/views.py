@@ -87,6 +87,27 @@ def admin_get_pending_applications(request):
     return Response(serializer.data)
 
 
+class AdminApplicationDetail(APIView):
+    permission_classes = [IsAdminUser]
+
+    @staticmethod
+    def get_object(pk):
+        try:
+            return Application.objects.get(pk=pk)
+        except Application.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        application = self.get_object(pk)
+        serializer = AdminApplicationSerializer(application)
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        application = self.get_object(pk)
+        application.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def user_list_view(request):

@@ -11,6 +11,7 @@ urlpatterns = [
 
     path('applications/', views.AdminApplicationList.as_view()),
     path('applications/pending/', views.admin_get_pending_applications),
+    path('applications/<int:pk>/', views.AdminApplicationDetail.as_view()),
 
     path('users/', views.user_list_view),
     path('users/<slug:slug>/', views.AdminUserDetail.as_view()),

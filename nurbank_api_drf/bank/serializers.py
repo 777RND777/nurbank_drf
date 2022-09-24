@@ -46,7 +46,8 @@ class AdminApplicationSerializer(ModelSerializer):
         fields = "__all__"
 
 
+# TODO deal with serializers
 class AdminApplicationCreateSerializer(ModelSerializer):
     class Meta:
         model = Application
-        fields = "__all__"
+        fields = ["value", "user_id"]
