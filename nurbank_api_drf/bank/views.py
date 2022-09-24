@@ -53,6 +53,14 @@ class ApplicationList(APIView):
         return Response(serializer.data)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_pending_applications(request):
+    applications = request.user.applications.filter(answer_date=None)
+    serializer = ApplicationSerializer(applications, many=True)
+    return Response(serializer.data)
+
+
 class AdminApplicationList(APIView):
     permission_classes = [IsAdminUser]
 
@@ -69,6 +77,14 @@ class AdminApplicationList(APIView):
         applications = Application.objects.all()
         serializer = AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_get_pending_applications(request):
+    applications = Application.objects.filter(answer_date=None)
+    serializer = ApplicationSerializer(applications, many=True)
+    return Response(serializer.data)
 
 
 @api_view(['GET'])
@@ -111,8 +127,16 @@ class AdminUserDetail(AdminUserMixin):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAdminUser])
 def user_application_list_view(request, slug):
     applications = Application.objects.filter(user__slug=slug)
+    serializer = ApplicationSerializer(applications, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_user_pending_applications(request, slug):
+    applications = Application.objects.filter(user__slug=slug, answer_date=None)
     serializer = ApplicationSerializer(applications, many=True)
     return Response(serializer.data)
