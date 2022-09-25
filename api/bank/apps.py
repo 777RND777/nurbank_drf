@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 class BankConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'nurbank_api_drf.bank'
+    name = 'bank'

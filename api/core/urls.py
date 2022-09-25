@@ -18,7 +18,7 @@ from django.urls import include, path
 from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
-    path('', include("nurbank_api_drf.bank.urls")),
+    path('', include("bank.urls")),
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('login/', obtain_auth_token),
