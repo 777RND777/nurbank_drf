@@ -1,21 +1,21 @@
 from django.urls import path
 
-from . import views
+from . import apis
 
 urlpatterns = [
-    path('me/', views.UserDetail.as_view()),
-    path('me/applications/', views.ApplicationList.as_view()),
-    path('me/pending/', views.PendingList.as_view()),
+    path('me/', apis.UserDetail.as_view()),
+    path('me/applications/', apis.ApplicationList.as_view()),
+    path('me/pending/', apis.PendingList.as_view()),
 
-    path('register/', views.register_view),
-    path('login/', views.login_view),
+    path('register/', apis.register_view),
+    path('login/', apis.login_view),
 
-    path('applications/', views.AdminApplicationList.as_view()),
-    path('applications/pending/', views.AdminPendingList.as_view()),
-    path('applications/<int:pk>/', views.AdminApplicationDetail.as_view()),
+    path('applications/', apis.AdminApplicationList.as_view()),
+    path('applications/pending/', apis.AdminPendingList.as_view()),
+    path('applications/<int:pk>/', apis.AdminApplicationDetail.as_view()),
 
-    path('users/', views.AdminUserList.as_view()),
-    path('users/<slug:slug>/', views.AdminUserDetail.as_view()),
-    path('users/<slug:slug>/applications/', views.AdminUserApplicationList.as_view()),
-    path('users/<slug:slug>/pending/', views.AdminUserPendingList.as_view()),
+    path('users/', apis.AdminUserList.as_view()),
+    path('users/<slug:slug>/', apis.AdminUserDetail.as_view()),
+    path('users/<slug:slug>/applications/', apis.AdminUserApplicationList.as_view()),
+    path('users/<slug:slug>/pending/', apis.AdminUserPendingList.as_view()),
 ]

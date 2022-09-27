@@ -26,16 +26,16 @@ def test_register(client, user_payload):
 
 
 @pytest.mark.django_db
-def test_login(client, user_payload, login_info):
+def test_login(client, user_payload):
     _ = client.post("/register/", user_payload)
-    response = client.post("/login/", {"username": login_info['username']})
+    response = client.post("/login/", {"username": user_payload['username']})
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    response = client.post("/login/", {"password": login_info['password']})
+    response = client.post("/login/", {"password": user_payload['password']})
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    response = client.post("/login/", {"username": "incorrect_username", "password": login_info['password']})
+    response = client.post("/login/", {"username": "incorrect_username", "password": user_payload['password']})
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    response = client.post("/login/", login_info)
+    response = client.post("/login/", user_payload)
     assert response.status_code == status.HTTP_200_OK
     assert "token" in response.data
 

@@ -8,9 +8,9 @@ def client():
 
 
 @pytest.fixture
-def user_client(client, user_payload, login_info):
+def user_client(client, user_payload):
     _ = client.post("/register/", user_payload)
-    _ = client.post("/login/", login_info)
+    _ = client.post("/login/", user_payload)
     return client
 
 
@@ -26,14 +26,6 @@ def user_payload():
         "username": "test_username",
         "first_name": "test_first_name",
         "last_name": "test_last_name",
-        "password": "test_password",
-    }
-
-
-@pytest.fixture
-def login_info():
-    return {
-        "username": "test_username",
         "password": "test_password",
     }
 
