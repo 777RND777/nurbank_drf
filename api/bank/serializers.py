@@ -47,6 +47,7 @@ class ApplicationCreateSerializer(ModelSerializer):
         fields = ["value", "request_date"]
         extra_kwargs = {
             'value': {'required': True},
+            'request_date': {'read_only': True},
         }
 
 
