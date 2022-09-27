@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from rest_framework import exceptions, response, status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -21,11 +22,8 @@ def register_view(request):
 def login_view(request):
     username = request.data.get("username")
     password = request.data.get("password")
-    user = User.objects.filter(username=username).first()
-
+    user = authenticate(username=username, password=password)
     if user is None:
-        raise exceptions.AuthenticationFailed("Invalid Credentials")
-    if not user.check_password(password):
         raise exceptions.AuthenticationFailed("Invalid Credentials")
 
     token = services.create_token(user_id=user.id)
@@ -73,6 +71,7 @@ class PendingList(AuthMixin):
 
 
 class AdminMixin(APIView):
+    authentication_classes = (CustomUserAuthentication,)
     permission_classes = (IsAdminUser,)
 
 
