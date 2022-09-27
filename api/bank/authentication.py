@@ -12,11 +12,10 @@ class CustomUserAuthentication(authentication.BaseAuthentication):
         if not token:
             return None
 
-        try:
-            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
-        except:
-            raise exceptions.AuthenticationFailed("Unauthorized")
+        # try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+        # except:
+        #     raise exceptions.AuthenticationFailed("Unauthorized")
 
         user = models.User.objects.filter(id=payload["id"]).first()
-
         return user, None

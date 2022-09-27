@@ -1,4 +1,3 @@
-from django.http import Http404
 from rest_framework import exceptions, response, status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -23,7 +22,7 @@ def register_view(request):
 def login_view(request):
     username = request.data["username"]
     password = request.data["password"]
-    user = services.get_user_by_slug(username)
+    user = User.objects.filter(username=username).first()
 
     if user is None:
         raise exceptions.AuthenticationFailed("Invalid Credentials")
