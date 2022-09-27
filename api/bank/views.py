@@ -20,8 +20,8 @@ def register_view(request):
 
 @api_view(['POST'])
 def login_view(request):
-    username = request.data["username"]
-    password = request.data["password"]
+    username = request.data.get("username")
+    password = request.data.get("password")
     user = User.objects.filter(username=username).first()
 
     if user is None:

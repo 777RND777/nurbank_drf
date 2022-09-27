@@ -3,6 +3,17 @@ import pytest
 
 @pytest.mark.django_db
 def test_register(client, user_payload):
+    response = client.post("/register/", {})
+    assert response.status_code == 400
+    response = client.post("/register/", {"username": user_payload['username']})
+    assert response.status_code == 400
+    response = client.post("/register/", {"password": user_payload['password']})
+    assert response.status_code == 400
+    response = client.post("/register/", {"username": user_payload['username'], "password": ""})
+    assert response.status_code == 400
+    response = client.post("/register/", {"username": "", "password": user_payload['password']})
+    assert response.status_code == 400
+
     response = client.post("/register/", user_payload)
     assert response.status_code == 201
 
@@ -16,9 +27,23 @@ def test_register(client, user_payload):
 @pytest.mark.django_db
 def test_login(client, user_payload, login_info):
     _ = client.post("/register/", user_payload)
+    response = client.post("/login/", {"username": login_info['username']})
+    assert response.status_code == 403
+    response = client.post("/login/", {"password": login_info['password']})
+    assert response.status_code == 403
+    response = client.post("/login/", {"username": "incorrect_username", "password": login_info['password']})
+    assert response.status_code == 403
+
     response = client.post("/login/", login_info)
     assert response.status_code == 200
-    assert response.data.get("token") is not None
+    assert "token" in response.data
+
+
+@pytest.mark.django_db
+def test_url_without_token(client, user_payload):
+    _ = client.post("/register/", user_payload)
+    response = client.get("/me/")
+    assert response.status_code == 403
 
 
 @pytest.mark.django_db
