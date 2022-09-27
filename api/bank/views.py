@@ -1,47 +1,63 @@
 from django.http import Http404
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import exceptions, response, status
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from . import serializers, services
+from .authentication import CustomUserAuthentication
 from .models import Application, User
-from .serializers import (RegistrationSerializer,
-                          AdminUserSerializer,
-                          UserChangeSerializer, UserSerializer,
-                          AdminApplicationCreateSerializer, AdminApplicationSerializer,
-                          ApplicationCreateSerializer, ApplicationSerializer)
 
 
 @api_view(['POST'])
 def register_view(request):
-    serializer = RegistrationSerializer(data=request.data)
+    serializer = serializers.RegistrationSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserDetail(APIView):
-    permission_classes = [IsAuthenticated]
+@api_view(['POST'])
+def login_view(request):
+    username = request.data["username"]
+    password = request.data["password"]
+    user = services.get_user_by_slug(username)
 
+    if user is None:
+        raise exceptions.AuthenticationFailed("Invalid Credentials")
+    if not user.check_password(password):
+        raise exceptions.AuthenticationFailed("Invalid Credentials")
+
+    token = services.create_token(user_id=user.id)
+    resp = response.Response()
+    resp.set_cookie(key="jwt", value=token, httponly=True)
+    resp.data = {"token": token}
+    return resp
+
+
+class AuthMixin(APIView):
+    authentication_classes = (CustomUserAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+
+class UserDetail(AuthMixin):
     def get(self, request):
-        serializer = UserSerializer(self.request.user)
+        serializer = serializers.UserSerializer(self.request.user)
         return Response(serializer.data)
 
     def patch(self, request):
-        serializer = UserChangeSerializer(self.request.user, data=request.data, partial=True)
+        serializer = serializers.UserChangeSerializer(self.request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ApplicationList(APIView):
-    permission_classes = [IsAuthenticated]
-
+class ApplicationList(AuthMixin):
     def post(self, request):
-        serializer = ApplicationCreateSerializer(data=request.data)
+        serializer = serializers.ApplicationCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=self.request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -49,24 +65,27 @@ class ApplicationList(APIView):
 
     def get(self, request):
         applications = self.request.user.applications
-        serializer = ApplicationSerializer(applications, many=True)
+        serializer = serializers.ApplicationSerializer(applications, many=True)
         return Response(serializer.data)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_pending_applications(request):
-    applications = request.user.applications.filter(answer_date=None)
-    serializer = ApplicationSerializer(applications, many=True)
-    return Response(serializer.data)
+class PendingList(AuthMixin):
+    def get(self, request):
+        applications = self.request.user.applications.filter(answer_date=None)
+        serializer = serializers.ApplicationSerializer(applications, many=True)
+        return Response(serializer.data)
 
 
-class AdminApplicationList(APIView):
-    permission_classes = [IsAdminUser]
+class AdminMixin(APIView):
+    permission_classes = (IsAdminUser,)
+
+
+class AdminApplicationList(AdminMixin):
+    permission_classes = (IsAdminUser,)
 
     @staticmethod
     def post(request):
-        serializer = AdminApplicationCreateSerializer(data=request.data)
+        serializer = serializers.AdminApplicationCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -75,89 +94,76 @@ class AdminApplicationList(APIView):
     @staticmethod
     def get(request):
         applications = Application.objects.all()
-        serializer = AdminApplicationSerializer(applications, many=True)
+        serializer = serializers.AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
 
 
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def admin_get_pending_applications(request):
-    applications = Application.objects.filter(answer_date=None)
-    serializer = ApplicationSerializer(applications, many=True)
-    return Response(serializer.data)
+class AdminPendingList(AdminMixin):
+    @staticmethod
+    def get(request):
+        applications = Application.objects.filter(answer_date=None)
+        serializer = serializers.ApplicationSerializer(applications, many=True)
+        return Response(serializer.data)
 
 
-class AdminApplicationDetail(APIView):
-    permission_classes = [IsAdminUser]
+class AdminApplicationDetail(AdminMixin):
+    permission_classes = (IsAdminUser,)
 
     @staticmethod
-    def get_object(pk):
-        try:
-            return Application.objects.get(pk=pk)
-        except Application.DoesNotExist:
-            raise Http404
-
-    def get(self, request, pk):
-        application = self.get_object(pk)
-        serializer = AdminApplicationSerializer(application)
+    def get(request, pk):
+        application = services.get_application_by_pk(pk)
+        serializer = serializers.AdminApplicationSerializer(application)
         return Response(serializer.data)
 
-    def delete(self, request, pk):
-        application = self.get_object(pk)
+    @staticmethod
+    def delete(request, pk):
+        application = services.get_application_by_pk(pk)
         application.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def user_list_view(request):
-    user = User.objects.all().order_by('-date_joined')
-    serializer = AdminUserSerializer(user, many=True)
-    return Response(serializer.data)
-
-
-class AdminUserMixin(APIView):
-    permission_classes = [IsAdminUser]
-
+class AdminUserList(AdminMixin):
     @staticmethod
-    def get_object(slug):
-        try:
-            return User.objects.get(slug=slug)
-        except User.DoesNotExist:
-            raise Http404
-
-
-class AdminUserDetail(AdminUserMixin):
-    def get(self, request, slug):
-        user = self.get_object(slug)
-        serializer = AdminUserSerializer(user)
+    def get(request):
+        user = User.objects.all().order_by('-date_joined')
+        serializer = serializers.AdminUserSerializer(user, many=True)
         return Response(serializer.data)
 
-    def patch(self, request, slug):
-        user = self.get_object(slug)
-        serializer = AdminUserSerializer(user, data=request.data, partial=True)
+
+class AdminUserDetail(AdminMixin):
+    @staticmethod
+    def get(request, slug):
+        user = services.get_user_by_slug(slug)
+        serializer = serializers.AdminUserSerializer(user)
+        return Response(serializer.data)
+
+    @staticmethod
+    def patch(request, slug):
+        user = services.get_user_by_slug(slug)
+        serializer = serializers.AdminUserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, slug):
-        user = self.get_object(slug)
+    @staticmethod
+    def delete(request, slug):
+        user = services.get_user_by_slug(slug)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def user_application_list_view(request, slug):
-    applications = Application.objects.filter(user__slug=slug)
-    serializer = ApplicationSerializer(applications, many=True)
-    return Response(serializer.data)
+class AdminUserApplicationList(AdminMixin):
+    @staticmethod
+    def get(request, slug):
+        applications = Application.objects.filter(user__slug=slug)
+        serializer = serializers.ApplicationSerializer(applications, many=True)
+        return Response(serializer.data)
 
 
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def get_user_pending_applications(request, slug):
-    applications = Application.objects.filter(user__slug=slug, answer_date=None)
-    serializer = ApplicationSerializer(applications, many=True)
-    return Response(serializer.data)
+class AdminUserPendingList(AdminMixin):
+    @staticmethod
+    def get(request, slug):
+        applications = Application.objects.filter(user__slug=slug, answer_date=False)
+        serializer = serializers.ApplicationSerializer(applications, many=True)
+        return Response(serializer.data)
