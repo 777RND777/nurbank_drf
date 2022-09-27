@@ -1,68 +1,44 @@
 import pytest
+from rest_framework import status
 
 
 @pytest.mark.django_db
-def test_register(client, user_payload):
-    response = client.post("/register/", {})
-    assert response.status_code == 400
-    response = client.post("/register/", {"username": user_payload['username']})
-    assert response.status_code == 400
-    response = client.post("/register/", {"password": user_payload['password']})
-    assert response.status_code == 400
-    response = client.post("/register/", {"username": user_payload['username'], "password": ""})
-    assert response.status_code == 400
-    response = client.post("/register/", {"username": "", "password": user_payload['password']})
-    assert response.status_code == 400
-
-    response = client.post("/register/", user_payload)
-    assert response.status_code == 201
-
-    data = response.data
-    assert data['username'] == user_payload['username']
-    assert data['first_name'] == user_payload['first_name']
-    assert data['last_name'] == user_payload['last_name']
-    assert "password" not in data
-
-
-@pytest.mark.django_db
-def test_login(client, user_payload, login_info):
-    _ = client.post("/register/", user_payload)
-    response = client.post("/login/", {"username": login_info['username']})
-    assert response.status_code == 403
-    response = client.post("/login/", {"password": login_info['password']})
-    assert response.status_code == 403
-    response = client.post("/login/", {"username": "incorrect_username", "password": login_info['password']})
-    assert response.status_code == 403
-
-    response = client.post("/login/", login_info)
-    assert response.status_code == 200
-    assert "token" in response.data
-
-
-@pytest.mark.django_db
-def test_url_without_token(client, user_payload):
-    _ = client.post("/register/", user_payload)
-    response = client.get("/me/")
-    assert response.status_code == 403
-
-
-@pytest.mark.django_db
-def test_user_detail(user_client, user_payload):
+def test_get_user(user_client, user_payload):
     response = user_client.get("/me/")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
 
     data = response.data
     assert data['username'] == user_payload['username']
     assert data['first_name'] == user_payload['first_name']
     assert data['last_name'] == user_payload['last_name']
     assert data['debt'] == 0
-    assert "password" not in data
+    assert len(data) == 4
+
+
+@pytest.mark.django_db
+def test_update_user(user_client, user_payload):
+    new_data = {
+        "first_name": "new_first_name",
+        "last_name": "new_last_name",
+        "username": "new_username",
+        "debt": 5000,
+        "password": "new_password"
+    }
+    response = user_client.patch("/me/", new_data)
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.data
+    assert data['first_name'] == new_data['first_name']
+    assert data['last_name'] == new_data['last_name']
+    assert data['username'] == user_payload['username']
+    assert data['debt'] == 0
+    assert len(data) == 4
 
 
 @pytest.mark.django_db
 def test_create_applications(user_client, application_payload):
     response = user_client.post("/me/applications/", application_payload)
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
 
     data = response.data
     assert data['value'] == application_payload['value']
@@ -73,7 +49,7 @@ def test_create_applications(user_client, application_payload):
 @pytest.mark.django_db
 def test_get_applications(user_client_with_applications, application_payload):
     response = user_client_with_applications.get("/me/applications/")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
 
     data = response.data
     assert len(data) == 1

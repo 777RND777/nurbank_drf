@@ -12,10 +12,9 @@ from .models import Application, User
 @api_view(['POST'])
 def register_view(request):
     serializer = serializers.RegistrationSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
@@ -48,19 +47,17 @@ class UserDetail(AuthMixin):
 
     def patch(self, request):
         serializer = serializers.UserChangeSerializer(self.request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class ApplicationList(AuthMixin):
     def post(self, request):
         serializer = serializers.ApplicationCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=self.request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=self.request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request):
         applications = self.request.user.applications
@@ -85,10 +82,9 @@ class AdminApplicationList(AdminMixin):
     @staticmethod
     def post(request):
         serializer = serializers.AdminApplicationCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @staticmethod
     def get(request):
@@ -140,10 +136,9 @@ class AdminUserDetail(AdminMixin):
     def patch(request, slug):
         user = services.get_user_by_slug(slug)
         serializer = serializers.AdminUserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     @staticmethod
     def delete(request, slug):
