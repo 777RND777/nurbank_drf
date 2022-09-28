@@ -28,7 +28,7 @@ def test_update_user(user_client, user_payload, user_change_payload):
 
 
 @pytest.mark.django_db
-def test_create_applications(user_client, user_application_payload):
+def test_create_application(user_client, user_application_payload):
     response = user_client.post("/me/applications/", user_application_payload)
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -38,7 +38,7 @@ def test_create_applications(user_client, user_application_payload):
 
 
 @pytest.mark.django_db
-def test_get_applications(user_client_with_application, user_application_payload):
+def test_get_application_list(user_client_with_application, user_application_payload):
     response = user_client_with_application.get("/me/applications/")
     assert response.status_code == status.HTTP_200_OK
 
