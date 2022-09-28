@@ -29,12 +29,6 @@ class UserChangeSerializer(ModelSerializer):
         }
 
 
-class AdminUserSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = "__all__"
-
-
 class ApplicationSerializer(ModelSerializer):
     class Meta:
         model = Application
@@ -48,6 +42,16 @@ class ApplicationCreateSerializer(ModelSerializer):
         extra_kwargs = {
             'value': {'required': True},
             'request_date': {'read_only': True},
+        }
+
+
+class AdminUserSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
+        extra_kwargs = {
+            'username': {'read_only': True},
+            'password': {'read_only': True},
         }
 
 

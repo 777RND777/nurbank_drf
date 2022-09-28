@@ -20,6 +20,17 @@ def user_payload():
 
 
 @pytest.fixture
+def user_change_payload():
+    return {
+        "first_name": "new_first_name",
+        "last_name": "new_last_name",
+        "username": "new_username",
+        "debt": 5000,
+        "password": "new_password"
+    }
+
+
+@pytest.fixture
 def application_payload():
     return {
         "value": 5000

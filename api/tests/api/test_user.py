@@ -15,22 +15,16 @@ def test_get_user(user_client, user_payload):
 
 
 @pytest.mark.django_db
-def test_update_user(user_client, user_payload):
-    new_data = {
-        "first_name": "new_first_name",
-        "last_name": "new_last_name",
-        "username": "new_username",
-        "debt": 5000,
-        "password": "new_password"
-    }
-    response = user_client.patch("/me/", new_data)
+def test_update_user(user_client, user_payload, user_change_payload):
+    response = user_client.patch("/me/", user_change_payload)
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
-    assert data['first_name'] == new_data['first_name']
-    assert data['last_name'] == new_data['last_name']
+    assert data['first_name'] == user_change_payload['first_name']
+    assert data['last_name'] == user_change_payload['last_name']
     assert data['username'] == user_payload['username']
     assert data['debt'] == 0
+    assert "password" not in data
 
 
 @pytest.mark.django_db

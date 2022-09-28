@@ -45,3 +45,17 @@ def test_auth_required_url(client, user_payload):
     _ = client.post("/register/", user_payload)
     response = client.get("/me/")
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+# TODO fix token problem
+# @pytest.mark.django_db
+# def test_token(user_client, client, user_payload):
+#     response = user_client.post("/login/", user_payload)
+#     token = response.data['token']
+#
+#     from rest_framework.test import APIClient
+#     new_client = APIClient()
+#     response = new_client.get("/me/")
+#     assert response.status_code == status.HTTP_403_FORBIDDEN
+#     response = new_client.get("/me/", headers={"Authorization": f"Bearer {token}"})
+#     assert response.status_code == status.HTTP_200_OK
