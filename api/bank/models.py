@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 
@@ -11,7 +13,7 @@ class User(AbstractUser):
 
 
 class Application(models.Model):
-    value = models.IntegerField()
+    value = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(settings.MAX_APPLICATION_VALUE)])
     request_date = models.DateTimeField(auto_now_add=True)
     answer_date = models.DateTimeField(blank=True, null=True)
     approved = models.BooleanField(default=False)

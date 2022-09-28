@@ -28,17 +28,17 @@ def test_update_user(user_client, user_payload, user_change_payload):
 
 
 @pytest.mark.django_db
-def test_create_application(user_client, user_application_payload):
-    response = user_client.post("/me/applications/", user_application_payload)
+def test_create_application(user_client, value):
+    response = user_client.post("/me/applications/", {"value": value})
     assert response.status_code == status.HTTP_201_CREATED
 
     data = response.data
-    assert data['value'] == user_application_payload['value']
+    assert data['value'] == value
     assert "request_date" in data
 
 
 @pytest.mark.django_db
-def test_get_application_list(user_client_with_application, user_application_payload):
+def test_get_application_list(user_client_with_application, value):
     response = user_client_with_application.get("/me/applications/")
     assert response.status_code == status.HTTP_200_OK
 
@@ -46,7 +46,7 @@ def test_get_application_list(user_client_with_application, user_application_pay
     assert len(data) == 1
 
     application = data[0]
-    assert application['value'] == user_application_payload['value']
+    assert application['value'] == value
     assert not application['approved']
     assert not application['answer_date']
     assert "request_date" in application

@@ -15,6 +15,11 @@ def n():
 
 
 @pytest.fixture
+def value():
+    return 500
+
+
+@pytest.fixture
 def user_payload():
     return {
         "username": "test_username",
@@ -36,13 +41,6 @@ def user_change_payload():
 
 
 @pytest.fixture
-def user_application_payload():
-    return {
-        "value": 5000
-    }
-
-
-@pytest.fixture
 def user_client(client, user_payload):
     _ = client.post("/register/", user_payload)
     _ = client.post("/login/", user_payload)
@@ -50,8 +48,8 @@ def user_client(client, user_payload):
 
 
 @pytest.fixture
-def user_client_with_application(user_client, user_application_payload):
-    _ = user_client.post("/me/applications/", user_application_payload)
+def user_client_with_application(user_client, value):
+    _ = user_client.post("/me/applications/", {"value": value})
     return user_client
 
 
@@ -77,7 +75,7 @@ def admin_client_with_one_user(admin_client, user_payload):
 
 
 @pytest.fixture
-def admin_client_with_n_users(admin_client, user_payload, user_application_payload, n):
+def admin_client_with_n_users(admin_client, user_payload, n):
     for i in range(n):
         _ = admin_client.post("/register/", {
             **user_payload,

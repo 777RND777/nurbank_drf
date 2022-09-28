@@ -127,3 +127,5 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'bank.User'
+
+MAX_APPLICATION_VALUE = 3_000_000

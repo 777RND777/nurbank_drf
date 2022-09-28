@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from rest_framework import status
 
 
@@ -8,15 +9,38 @@ def test_admin_url(user_client):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-# @pytest.mark.django_db
-# def test_create_application(admin_client_with_one_user):
-#     response = admin_client_with_one_user.post("/applications/")
-#     assert response.status_code == status.HTTP_200_OK
-#
-#     data = response.data
-#     assert len(data) == 0  # TODO
-#
-#
+@pytest.mark.django_db
+def test_create_application(admin_client_with_one_user, user_payload, value):
+    user_id = admin_client_with_one_user.get(f"/users/{user_payload['username']}/").data['id']
+
+    response = admin_client_with_one_user.post("/applications/", {})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response = admin_client_with_one_user.post("/applications/", {"value": value})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response = admin_client_with_one_user.post("/applications/", {"user": user_id})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response = admin_client_with_one_user.post("/applications/", {"value": 0, "user": user_id})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response = admin_client_with_one_user.post("/applications/", {"value": -value, "user": user_id})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response = admin_client_with_one_user.post("/applications/",
+                                               {"value": settings.MAX_APPLICATION_VALUE + 1, "user": user_id})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response = admin_client_with_one_user.post("/applications/", {"value": value, "user": 0})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    response = admin_client_with_one_user.post("/applications/", {"value": value, "user": user_id})
+    assert response.status_code == status.HTTP_201_CREATED
+
+    data = response.data
+    assert data['value'] == value
+    assert data['user'] == user_id
+    # TODO
+    #  and user debt check
+    # assert data['approved'] == True
+    # assert data['is_admin'] == True
+
+
 # @pytest.mark.django_db
 # def test_get_application_list(admin_client_with_n_users, n):
 #     response = admin_client_with_n_users.get("/applications/")
@@ -77,7 +101,6 @@ def test_delete_user(admin_client_with_one_user, user_payload):
 
     response = admin_client_with_one_user.get(f"/users/{user_payload['username']}/")
     assert response.status_code == status.HTTP_404_NOT_FOUND
-
 
 # @pytest.mark.django_db
 # def test_get_user_application_list(admin_client_full, admin_user_payload):

@@ -72,5 +72,5 @@ class AdminApplicationCreateSerializer(ModelSerializer):
         fields = "__all__"
         extra_kwargs = {
             'value': {'required': True},
-            'user_id': {'required': True},
+            'user': {'required': True},
         }
