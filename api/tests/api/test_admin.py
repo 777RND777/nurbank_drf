@@ -10,26 +10,25 @@ def test_admin_url(user_client):
 
 
 @pytest.mark.django_db
-def test_create_application(admin_client_with_one_user, user_payload, value):
-    user_id = admin_client_with_one_user.get(f"/users/{user_payload['username']}/").data['id']
+def test_create_application(admin_client, user_payload, value):
+    user_id = admin_client.get(f"/users/{user_payload['username']}/").data['id']
 
-    response = admin_client_with_one_user.post("/applications/", {})
+    response = admin_client.post("/applications/", {})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response = admin_client_with_one_user.post("/applications/", {"value": value})
+    response = admin_client.post("/applications/", {"value": value})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response = admin_client_with_one_user.post("/applications/", {"user": user_id})
+    response = admin_client.post("/applications/", {"user": user_id})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response = admin_client_with_one_user.post("/applications/", {"value": 0, "user": user_id})
+    response = admin_client.post("/applications/", {"value": 0, "user": user_id})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response = admin_client_with_one_user.post("/applications/", {"value": -value, "user": user_id})
+    response = admin_client.post("/applications/", {"value": -value, "user": user_id})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response = admin_client_with_one_user.post("/applications/",
-                                               {"value": settings.MAX_APPLICATION_VALUE + 1, "user": user_id})
+    response = admin_client.post("/applications/", {"value": settings.MAX_APPLICATION_VALUE + 1, "user": user_id})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response = admin_client_with_one_user.post("/applications/", {"value": value, "user": 0})
+    response = admin_client.post("/applications/", {"value": value, "user": 0})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    response = admin_client_with_one_user.post("/applications/", {"value": value, "user": user_id})
+    response = admin_client.post("/applications/", {"value": value, "user": user_id})
     assert response.status_code == status.HTTP_201_CREATED
 
     data = response.data
@@ -42,29 +41,34 @@ def test_create_application(admin_client_with_one_user, user_payload, value):
 
 
 # @pytest.mark.django_db
-# def test_get_application_list(admin_client_with_n_users, n):
-#     response = admin_client_with_n_users.get("/applications/")
+# def test_get_application_list(admin_client, user_payload, value):
+#     response = admin_client.get("/applications/")
 #     assert response.status_code == status.HTTP_200_OK
+#     assert len(response.data) == 0
 #
-#     data = response.data
-#     assert len(data) == 0  # TODO
+#     user_id = admin_client.get(f"/users/{user_payload['username']}/").data['id']
+#     _ = admin_client.post("/applications/", {"value": value, "user": user_id})
+#
+#     response = admin_client.get("/applications/")
+#     assert response.status_code == status.HTTP_200_OK
+#     assert len(response.data) == 1
 
 
 @pytest.mark.django_db
-def test_get_user_list(admin_client_with_n_users, n):
-    response = admin_client_with_n_users.get("/users/")
+def test_get_user_list(admin_client):
+    response = admin_client.get("/users/")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
-    assert len(data) == n + 1
+    assert len(data) == 2
 
 
 @pytest.mark.django_db
-def test_get_user(admin_client_with_one_user, user_payload):
-    response = admin_client_with_one_user.get(f"/users/unregistered_user/")
+def test_get_user(admin_client, user_payload):
+    response = admin_client.get(f"/users/unregistered_user/")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    response = admin_client_with_one_user.get(f"/users/{user_payload['username']}/")
+    response = admin_client.get(f"/users/{user_payload['username']}/")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
@@ -74,11 +78,11 @@ def test_get_user(admin_client_with_one_user, user_payload):
 
 
 @pytest.mark.django_db
-def test_patch_user(admin_client_with_one_user, user_payload, user_change_payload):
-    response = admin_client_with_one_user.patch(f"/users/unregistered_user/", user_change_payload)
+def test_patch_user(admin_client, user_payload, user_change_payload):
+    response = admin_client.patch(f"/users/unregistered_user/", user_change_payload)
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    response = admin_client_with_one_user.patch(f"/users/{user_payload['username']}/", user_change_payload)
+    response = admin_client.patch(f"/users/{user_payload['username']}/", user_change_payload)
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
@@ -87,28 +91,31 @@ def test_patch_user(admin_client_with_one_user, user_payload, user_change_payloa
     assert data['debt'] == user_change_payload['debt']
     assert data['username'] == f"{user_payload['username']}"
 
-    response = admin_client_with_one_user.post("/login/", user_payload)
+    response = admin_client.post("/login/", user_payload)
     assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.django_db
-def test_delete_user(admin_client_with_one_user, user_payload):
-    response = admin_client_with_one_user.delete(f"/users/unregistered_user/")
+def test_delete_user(admin_client, user_payload):
+    response = admin_client.delete(f"/users/unregistered_user/")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    response = admin_client_with_one_user.delete(f"/users/{user_payload['username']}/")
+    response = admin_client.delete(f"/users/{user_payload['username']}/")
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    response = admin_client_with_one_user.get(f"/users/{user_payload['username']}/")
+    response = admin_client.get(f"/users/{user_payload['username']}/")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
-# @pytest.mark.django_db
-# def test_get_user_application_list(admin_client_full, admin_user_payload):
-#     response = admin_client_full.get(f"/users/unregistered_user/applications/")
-#     assert response.status_code == status.HTTP_404_NOT_FOUND
-#
-#     response = admin_client_full.get(f"/users/{admin_user_payload['username']}/applications/")
-#     assert response.status_code == status.HTTP_200_OK
-#
-#     data = response.data
-#     assert len(data) == 0
+
+@pytest.mark.django_db
+def test_get_user_application_list(admin_client, user_payload, value):
+    response = admin_client.get("/applications/")
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 0
+
+    user_id = admin_client.get(f"/users/{user_payload['username']}/").data['id']
+    _ = admin_client.post("/applications/", {"value": value, "user": user_id})
+
+    response = admin_client.get("/applications/")
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1

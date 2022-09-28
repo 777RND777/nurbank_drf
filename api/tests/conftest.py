@@ -10,11 +10,6 @@ def client():
 
 
 @pytest.fixture
-def n():
-    return 3
-
-
-@pytest.fixture
 def value():
     return 500
 
@@ -62,23 +57,7 @@ def admin_payload():
 
 
 @pytest.fixture
-def admin_client(client, admin_payload):
+def admin_client(user_client, admin_payload):
     _ = User.objects.create_superuser(**admin_payload)
-    _ = client.post("/login/", admin_payload)
-    return client
-
-
-@pytest.fixture
-def admin_client_with_one_user(admin_client, user_payload):
-    _ = admin_client.post("/register/", user_payload)
-    return admin_client
-
-
-@pytest.fixture
-def admin_client_with_n_users(admin_client, user_payload, n):
-    for i in range(n):
-        _ = admin_client.post("/register/", {
-            **user_payload,
-            "username": f"{user_payload['username']}{i}",
-        })
-    return admin_client
+    _ = user_client.post("/login/", admin_payload)
+    return user_client
