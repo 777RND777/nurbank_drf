@@ -1,6 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 
 from .models import Application, User
+from .services import UserDataClass
 
 
 class RegistrationSerializer(ModelSerializer):
@@ -11,6 +12,10 @@ class RegistrationSerializer(ModelSerializer):
             'username': {'required': True},
             'password': {'required': True, 'write_only': True}
         }
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        return UserDataClass(**data)
 
 
 class UserSerializer(ModelSerializer):

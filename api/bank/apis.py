@@ -14,7 +14,9 @@ from .models import Application, User
 def register_view(request):
     serializer = serializers.RegistrationSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+
+    data = serializer.validated_data
+    serializer.instance = services.create_user(user_dc=data)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

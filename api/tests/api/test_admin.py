@@ -26,7 +26,7 @@ def test_get_user(admin_client_with_user, user_payload):
 
 
 @pytest.mark.django_db
-def test_patch_user(client, admin_client_with_user, user_payload, user_change_payload):
+def test_patch_user(admin_client_with_user, user_payload, user_change_payload):
     response = admin_client_with_user.patch(f"/users/unregistered_user/", user_change_payload)
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -38,10 +38,9 @@ def test_patch_user(client, admin_client_with_user, user_payload, user_change_pa
     assert data['last_name'] == user_change_payload['last_name']
     assert data['debt'] == user_change_payload['debt']
     assert data['username'] == user_payload['username']
-    # TODO create your own UserManager
-    #  password does not change. So test should be working,
-    #  but method .save() in User model hashes password again...
-    # assert admin_client_with_user.post("/login/", user_payload).status_code == status.HTTP_200_OK
+
+    response = admin_client_with_user.post("/login/", user_payload)
+    assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.django_db
