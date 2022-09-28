@@ -78,8 +78,6 @@ class AdminMixin(APIView):
 
 
 class AdminApplicationList(AdminMixin):
-    permission_classes = (IsAdminUser,)
-
     @staticmethod
     def post(request):
         serializer = serializers.AdminApplicationCreateSerializer(data=request.data)
@@ -103,8 +101,6 @@ class AdminPendingList(AdminMixin):
 
 
 class AdminApplicationDetail(AdminMixin):
-    permission_classes = (IsAdminUser,)
-
     @staticmethod
     def get(request, pk):
         application = services.get_application_by_pk(pk)
@@ -151,7 +147,7 @@ class AdminUserDetail(AdminMixin):
 class AdminUserApplicationList(AdminMixin):
     @staticmethod
     def get(request, slug):
-        applications = Application.objects.filter(user__slug=slug)
+        applications = services.get_user_by_slug(slug).applications
         serializer = serializers.ApplicationSerializer(applications, many=True)
         return Response(serializer.data)
 
@@ -159,6 +155,6 @@ class AdminUserApplicationList(AdminMixin):
 class AdminUserPendingList(AdminMixin):
     @staticmethod
     def get(request, slug):
-        applications = Application.objects.filter(user__slug=slug, answer_date=False)
+        applications = services.get_user_by_slug(slug).applications.filter(answer_date=None)
         serializer = serializers.ApplicationSerializer(applications, many=True)
         return Response(serializer.data)

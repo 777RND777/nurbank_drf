@@ -10,6 +10,11 @@ def client():
 
 
 @pytest.fixture
+def n():
+    return 3
+
+
+@pytest.fixture
 def user_payload():
     return {
         "username": "test_username",
@@ -31,17 +36,9 @@ def user_change_payload():
 
 
 @pytest.fixture
-def application_payload():
+def user_application_payload():
     return {
         "value": 5000
-    }
-
-
-@pytest.fixture
-def admin_payload():
-    return {
-        "username": "admin",
-        "password": "root",
     }
 
 
@@ -53,13 +50,39 @@ def user_client(client, user_payload):
 
 
 @pytest.fixture
-def user_client_with_application(user_client, application_payload):
-    _ = user_client.post("/me/applications/", application_payload)
+def user_client_with_application(user_client, user_application_payload):
+    _ = user_client.post("/me/applications/", user_application_payload)
     return user_client
 
 
 @pytest.fixture
-def admin_client_with_user(user_client_with_application, admin_payload):
+def admin_payload():
+    return {
+        "username": "admin",
+        "password": "root",
+    }
+
+
+@pytest.fixture
+def admin_user_payload(user_payload, n):
+    return {
+        **user_payload,
+        "username": f"{user_payload['username']}{n - 1}",
+    }
+
+
+@pytest.fixture
+def admin_client(client, admin_payload):
     _ = User.objects.create_superuser(**admin_payload)
-    _ = user_client_with_application.post("/login/", admin_payload)
-    return user_client_with_application
+    _ = client.post("/login/", admin_payload)
+    return client
+
+
+@pytest.fixture
+def admin_client_full(admin_client, user_payload, user_application_payload, n):
+    for i in range(n):
+        _ = admin_client.post("/register/", {
+            **user_payload,
+            "username": f"{user_payload['username']}{i}",
+        })
+    return admin_client

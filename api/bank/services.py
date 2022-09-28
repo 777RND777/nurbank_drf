@@ -13,8 +13,8 @@ from .models import Application, User
 class UserDataClass:
     username: str
     password: str
-    first_name: str = None
-    last_name: str = None
+    first_name: str = ""
+    last_name: str = ""
 
     @classmethod
     def from_instance(cls, user: User) -> "UserDataClass":
