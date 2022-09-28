@@ -12,7 +12,6 @@ def test_get_user(user_client, user_payload):
     assert data['first_name'] == user_payload['first_name']
     assert data['last_name'] == user_payload['last_name']
     assert data['debt'] == 0
-    assert len(data) == 4
 
 
 @pytest.mark.django_db
@@ -32,7 +31,6 @@ def test_update_user(user_client, user_payload):
     assert data['last_name'] == new_data['last_name']
     assert data['username'] == user_payload['username']
     assert data['debt'] == 0
-    assert len(data) == 4
 
 
 @pytest.mark.django_db
@@ -43,12 +41,11 @@ def test_create_applications(user_client, application_payload):
     data = response.data
     assert data['value'] == application_payload['value']
     assert "request_date" in data
-    assert len(data.keys()) == 2
 
 
 @pytest.mark.django_db
-def test_get_applications(user_client_with_applications, application_payload):
-    response = user_client_with_applications.get("/me/applications/")
+def test_get_applications(user_client_with_application, application_payload):
+    response = user_client_with_application.get("/me/applications/")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
@@ -59,4 +56,3 @@ def test_get_applications(user_client_with_applications, application_payload):
     assert not application['approved']
     assert not application['answer_date']
     assert "request_date" in application
-    assert len(application.keys()) == 4

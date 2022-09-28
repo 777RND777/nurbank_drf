@@ -22,7 +22,7 @@ def test_register(client, user_payload):
     assert data['username'] == user_payload['username']
     assert data['first_name'] == user_payload['first_name']
     assert data['last_name'] == user_payload['last_name']
-    assert len(data) == 3  # without password
+    assert "password" not in data
 
 
 @pytest.mark.django_db
