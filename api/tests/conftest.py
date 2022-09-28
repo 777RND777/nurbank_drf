@@ -57,7 +57,7 @@ def admin_payload():
 
 
 @pytest.fixture
-def admin_client(user_client, admin_payload):
+def admin_client(user_client_with_application, admin_payload):
     _ = User.objects.create_superuser(**admin_payload)
-    _ = user_client.post("/login/", admin_payload)
-    return user_client
+    _ = user_client_with_application.post("/login/", admin_payload)
+    return user_client_with_application

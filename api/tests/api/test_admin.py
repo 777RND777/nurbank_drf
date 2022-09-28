@@ -40,18 +40,37 @@ def test_create_application(admin_client, user_payload, value):
     # assert data['is_admin'] == True
 
 
-# @pytest.mark.django_db
-# def test_get_application_list(admin_client, user_payload, value):
-#     response = admin_client.get("/applications/")
-#     assert response.status_code == status.HTTP_200_OK
-#     assert len(response.data) == 0
-#
-#     user_id = admin_client.get(f"/users/{user_payload['username']}/").data['id']
-#     _ = admin_client.post("/applications/", {"value": value, "user": user_id})
-#
-#     response = admin_client.get("/applications/")
-#     assert response.status_code == status.HTTP_200_OK
-#     assert len(response.data) == 1
+# TODO application list
+#  better test with several users
+
+
+# TODO pending list after approve/decline/cancel
+#  better test with several users
+
+
+@pytest.mark.django_db
+def test_get_application(admin_client, user_payload, value):
+    response = admin_client.get("/applications/100/")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    response = admin_client.get("/applications/1/")
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.data
+    assert data['user'] == admin_client.get(f"/users/{user_payload['username']}/").data['id']
+    assert data['value'] == value
+
+
+@pytest.mark.django_db
+def test_delete_application(admin_client):
+    response = admin_client.delete("/applications/100/")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    response = admin_client.delete("/applications/1/")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    response = admin_client.get("/applications/1/")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
@@ -111,11 +130,14 @@ def test_delete_user(admin_client, user_payload):
 def test_get_user_application_list(admin_client, user_payload, value):
     response = admin_client.get("/applications/")
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.data) == 0
+    assert len(response.data) == 1
 
     user_id = admin_client.get(f"/users/{user_payload['username']}/").data['id']
     _ = admin_client.post("/applications/", {"value": value, "user": user_id})
 
     response = admin_client.get("/applications/")
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.data) == 1
+    assert len(response.data) == 2
+
+
+# TODO user pending list after approve/decline/cancel
