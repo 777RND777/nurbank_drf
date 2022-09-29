@@ -42,6 +42,36 @@ def test_create_application(admin_client, value):
 
 
 @pytest.mark.django_db
+def test_get_application_list(admin_client_users, admin_payload, user_payload, value, n):
+    response = admin_client_users.get("/applications/")
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.data
+    assert len(data) == n
+
+    _ = admin_client_users.post("/login/", user_payload)
+    _ = admin_client_users.post("/me/applications/", {"value": value})
+    _ = admin_client_users.post("/login/", admin_payload)
+
+    response = admin_client_users.get("/applications/")
+    assert len(response.data) == n + 1
+
+
+@pytest.mark.django_db
+def test_get_active_application_list(admin_client_users, n):
+    response = admin_client_users.get("/applications/active/")
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.data
+    assert len(data) == n - 1
+
+    _ = admin_client_users.post(f"/applications/{n}/decline/")
+
+    response = admin_client_users.get("/applications/active/")
+    assert len(response.data) == n - 2
+
+
+@pytest.mark.django_db
 def test_get_application(admin_client, value):
     response = admin_client.get("/applications/100/")
     assert response.status_code == status.HTTP_404_NOT_FOUND

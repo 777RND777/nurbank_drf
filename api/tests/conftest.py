@@ -15,6 +15,11 @@ def value():
 
 
 @pytest.fixture
+def n():
+    return 3
+
+
+@pytest.fixture
 def user_payload():
     return {
         "username": "test_username",
@@ -61,3 +66,15 @@ def admin_client(user_client_with_application, admin_payload):
     _ = User.objects.create_superuser(**admin_payload)
     _ = user_client_with_application.post("/login/", admin_payload)
     return user_client_with_application
+
+
+@pytest.fixture
+def admin_client_users(admin_client, admin_payload, user_payload, value, n):
+    _ = admin_client.post('/applications/1/decline/')
+    for i in range(1, n):
+        user_payload_current = {**user_payload, "username": f"test_user{i}"}
+        User.objects.create_user(**user_payload_current)
+        _ = admin_client.post('/login/', user_payload_current)
+        _ = admin_client.post('/me/applications/', {"value": value})
+    _ = admin_client.post("/login/", admin_payload)
+    return admin_client
