@@ -1,5 +1,6 @@
 import dataclasses
 import datetime
+from collections import OrderedDict
 
 from django.conf import settings
 from django.http import Http404
@@ -34,6 +35,12 @@ def create_user(user_dc: UserDataClass) -> UserDataClass:
     user.set_password(user_dc.password)
     user.save()
     return UserDataClass.from_instance(user)
+
+
+def change_user_debt(application: OrderedDict) -> None:
+    user = User.objects.get(id=application['user'].id)
+    user.debt += application['value']
+    user.save()
 
 
 def get_user_by_slug(slug):

@@ -2,6 +2,8 @@ import pytest
 from django.conf import settings
 from rest_framework import status
 
+from bank.models import User
+
 
 @pytest.mark.django_db
 def test_admin_url(user_client):
@@ -11,7 +13,7 @@ def test_admin_url(user_client):
 
 @pytest.mark.django_db
 def test_create_application(admin_client, user_payload, value):
-    user_id = admin_client.get(f"/users/{user_payload['username']}/").data['id']
+    user_id = User.objects.get(is_superuser=False).id
 
     response = admin_client.post("/applications/", {})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -34,10 +36,9 @@ def test_create_application(admin_client, user_payload, value):
     data = response.data
     assert data['value'] == value
     assert data['user'] == user_id
-    # TODO
-    #  and user debt check
-    # assert data['approved'] == True
-    # assert data['is_admin'] == True
+    assert data['approved']
+    assert data['is_admin']
+    assert value == User.objects.get(is_superuser=False).debt
 
 
 # TODO application list
@@ -57,7 +58,7 @@ def test_get_application(admin_client, user_payload, value):
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
-    assert data['user'] == admin_client.get(f"/users/{user_payload['username']}/").data['id']
+    assert data['user'] == User.objects.get(is_superuser=False).id
     assert data['value'] == value
 
 
@@ -132,12 +133,11 @@ def test_get_user_application_list(admin_client, user_payload, value):
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data) == 1
 
-    user_id = admin_client.get(f"/users/{user_payload['username']}/").data['id']
+    user_id = User.objects.get(is_superuser=False).id
     _ = admin_client.post("/applications/", {"value": value, "user": user_id})
 
     response = admin_client.get("/applications/")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data) == 2
-
 
 # TODO user pending list after approve/decline/cancel

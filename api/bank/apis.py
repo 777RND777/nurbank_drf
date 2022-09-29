@@ -85,7 +85,8 @@ class AdminApplicationList(AdminMixin):
     def post(request):
         serializer = serializers.AdminApplicationCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer.save(approved=True, is_admin=True)
+        services.change_user_debt(serializer.validated_data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @staticmethod
