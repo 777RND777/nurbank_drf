@@ -101,6 +101,8 @@ class AdminApplicationList(AdminMixin):
         services.change_user_debt(serializer.validated_data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    # TODO add tests
+    #  better test with several users
     @staticmethod
     def get(request):
         applications = Application.objects.all()
@@ -109,6 +111,8 @@ class AdminApplicationList(AdminMixin):
 
 
 class AdminActiveApplicationList(AdminMixin):
+    # TODO add tests
+    #  better test with several users and application functionality
     @staticmethod
     def get(request):
         applications = Application.objects.filter(answer_date=None)
@@ -169,6 +173,8 @@ class AdminUserApplicationList(AdminMixin):
 
 
 class AdminUserActiveApplication(AdminMixin):
+    # TODO add tests
+    #  better test with application functionality
     @staticmethod
     def get(request, slug):
         applications = services.get_user_by_slug(slug).applications.filter(answer_date=None)

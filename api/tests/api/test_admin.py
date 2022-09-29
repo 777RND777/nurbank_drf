@@ -41,14 +41,6 @@ def test_create_application(admin_client, user_payload, value):
     assert value == User.objects.get(is_superuser=False).debt
 
 
-# TODO application list
-#  better test with several users
-
-
-# TODO pending list after approve/decline/cancel
-#  better test with several users
-
-
 @pytest.mark.django_db
 def test_get_application(admin_client, user_payload, value):
     response = admin_client.get("/applications/100/")
@@ -139,5 +131,3 @@ def test_get_user_application_list(admin_client, user_payload, value):
     response = admin_client.get("/applications/")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data) == 2
-
-# TODO user pending list after approve/decline/cancel
