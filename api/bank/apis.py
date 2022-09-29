@@ -68,10 +68,10 @@ class ApplicationList(AuthMixin):
         return Response(serializer.data)
 
 
-class PendingList(AuthMixin):
+class ApplicationActive(AuthMixin):
     def get(self, request):
-        applications = self.request.user.applications.filter(answer_date=None)
-        serializer = serializers.ApplicationSerializer(applications, many=True)
+        application = self.request.user.applications.filter(answer_date=None).first()
+        serializer = serializers.ApplicationSerializer(application)
         return Response(serializer.data)
 
 
@@ -95,7 +95,7 @@ class AdminApplicationList(AdminMixin):
         return Response(serializer.data)
 
 
-class AdminPendingList(AdminMixin):
+class AdminActiveApplicationList(AdminMixin):
     @staticmethod
     def get(request):
         applications = Application.objects.filter(answer_date=None)
@@ -155,7 +155,7 @@ class AdminUserApplicationList(AdminMixin):
         return Response(serializer.data)
 
 
-class AdminUserPendingList(AdminMixin):
+class AdminUserActiveApplication(AdminMixin):
     @staticmethod
     def get(request, slug):
         applications = services.get_user_by_slug(slug).applications.filter(answer_date=None)
