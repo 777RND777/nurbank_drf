@@ -49,6 +49,7 @@ def test_get_application_list(admin_client_users, admin_payload, user_payload, v
     data = response.data
     assert len(data) == n
 
+    _ = admin_client_users.post('/applications/1/decline/')
     _ = admin_client_users.post("/login/", user_payload)
     _ = admin_client_users.post("/me/applications/", {"value": value})
     _ = admin_client_users.post("/login/", admin_payload)
@@ -63,12 +64,12 @@ def test_get_active_application_list(admin_client_users, n):
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
-    assert len(data) == n - 1
+    assert len(data) == n
 
     _ = admin_client_users.post(f"/applications/{n}/decline/")
 
     response = admin_client_users.get("/applications/active/")
-    assert len(response.data) == n - 2
+    assert len(response.data) == n - 1
 
 
 @pytest.mark.django_db

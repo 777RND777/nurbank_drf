@@ -70,7 +70,6 @@ def admin_client(user_client_with_application, admin_payload):
 
 @pytest.fixture
 def admin_client_users(admin_client, admin_payload, user_payload, value, n):
-    _ = admin_client.post('/applications/1/decline/')
     for i in range(1, n):
         user_payload_current = {**user_payload, "username": f"test_user{i}"}
         User.objects.create_user(**user_payload_current)
