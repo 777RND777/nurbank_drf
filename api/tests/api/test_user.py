@@ -37,7 +37,7 @@ def test_create_application(user_client, value):
 
     data = response.data
     assert data['value'] == value
-    assert "request_date" in data
+    assert data['request_date']
 
     response = user_client.post("/me/applications/", {"value": value})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -53,6 +53,40 @@ def test_get_application_list(user_client_with_application, value):
 
     application = data[0]
     assert application['value'] == value
-    assert not application['approved']
+    assert application['request_date']
     assert not application['answer_date']
-    assert "request_date" in application
+    assert not application['approved']
+
+
+@pytest.mark.django_db
+def test_get_active_application(user_client, value):
+    response = user_client.get("/me/active/")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    _ = user_client.post("/me/applications/", {"value": value})
+
+    response = user_client.get("/me/active/")
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.data
+    assert data['value'] == value
+    assert data['request_date']
+    assert not data['answer_date']
+    assert not data['approved']
+
+
+@pytest.mark.django_db
+def test_cancel_application(user_client, value):
+    response = user_client.get("/me/active/")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    _ = user_client.post("/me/applications/", {"value": value})
+
+    response = user_client.post("/me/cancel/")
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.data
+    assert data['value'] == value
+    assert data['request_date']
+    assert data['answer_date']
+    assert not data['approved']

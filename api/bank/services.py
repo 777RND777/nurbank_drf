@@ -57,6 +57,11 @@ def get_application_by_pk(pk):
         raise Http404
 
 
+def set_answer_date(application: Application):
+    application.answer_date = datetime.datetime.now()
+    application.save()
+
+
 def create_token(user_id: int) -> str:
     payload = dict(
         id=user_id,

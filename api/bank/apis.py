@@ -58,7 +58,6 @@ class ApplicationList(AuthMixin):
         serializer.is_valid(raise_exception=True)
         if self.request.user.applications.filter(answer_date=None).first():
             return Response({"message": "You already have active application."}, status=status.HTTP_400_BAD_REQUEST)
-
         serializer.save(user=self.request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -71,7 +70,20 @@ class ApplicationList(AuthMixin):
 class ApplicationActive(AuthMixin):
     def get(self, request):
         application = self.request.user.applications.filter(answer_date=None).first()
+        if application is None:
+            return Response({"message": "You do not have active application."}, status=status.HTTP_204_NO_CONTENT)
         serializer = serializers.ApplicationSerializer(application)
+        return Response(serializer.data)
+
+
+class ApplicationCancel(AuthMixin):
+    def post(self, request):
+        application = self.request.user.applications.filter(answer_date=None).first()
+        if application is None:
+            return Response({"message": "You do not have active application."}, status=status.HTTP_204_NO_CONTENT)
+        services.set_answer_date(application)
+        serializer = serializers.ApplicationSerializer()
+        serializer.instance = application
         return Response(serializer.data)
 
 

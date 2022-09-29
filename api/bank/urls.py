@@ -6,6 +6,7 @@ urlpatterns = [
     path('me/', apis.UserDetail.as_view()),
     path('me/applications/', apis.ApplicationList.as_view()),
     path('me/active/', apis.ApplicationActive.as_view()),
+    path('me/cancel/', apis.ApplicationCancel.as_view()),
 
     path('register/', apis.register_view),
     path('login/', apis.login_view),
