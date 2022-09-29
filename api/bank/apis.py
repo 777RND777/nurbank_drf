@@ -116,7 +116,7 @@ class AdminActiveApplicationList(AdminMixin):
     @staticmethod
     def get(request):
         applications = Application.objects.filter(answer_date=None)
-        serializer = serializers.ApplicationSerializer(applications, many=True)
+        serializer = serializers.AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
 
 
@@ -135,30 +135,28 @@ class AdminApplicationDetail(AdminMixin):
 
 
 class AdminApplicationApprove(AdminMixin):
-    # TODO add tests
     @staticmethod
-    def post(request, slug):
-        application = services.get_user_by_slug(slug).applications.filter(answer_date=None).first()
-        if application is None:
-            return Response({"message": f"User {slug} does not have active application."},
-                            status=status.HTTP_204_NO_CONTENT)
+    def post(request, pk):
+        application = services.get_application_by_pk(pk)
+        if application.answer_date:
+            return Response({"message": f"Application is not active."},
+                            status=status.HTTP_400_BAD_REQUEST)
         services.approve_application(application)
-        serializer = serializers.ApplicationSerializer()
+        serializer = serializers.AdminApplicationSerializer()
         serializer.instance = application
-        services.change_user_debt(serializer.validated_data)
+        services.change_user_debt(serializer.data)
         return Response(serializer.data)
 
 
 class AdminApplicationDecline(AdminMixin):
-    # TODO add tests
     @staticmethod
-    def post(request, slug):
-        application = services.get_user_by_slug(slug).applications.filter(answer_date=None).first()
-        if application is None:
-            return Response({"message": f"User {slug} does not have active application."},
-                            status=status.HTTP_204_NO_CONTENT)
+    def post(request, pk):
+        application = services.get_application_by_pk(pk)
+        if application.answer_date:
+            return Response({"message": f"Application is not active."},
+                            status=status.HTTP_400_BAD_REQUEST)
         services.set_answer_date(application)
-        serializer = serializers.ApplicationSerializer()
+        serializer = serializers.AdminApplicationSerializer()
         serializer.instance = application
         return Response(serializer.data)
 
@@ -197,7 +195,7 @@ class AdminUserApplicationList(AdminMixin):
     @staticmethod
     def get(request, slug):
         applications = services.get_user_by_slug(slug).applications
-        serializer = serializers.ApplicationSerializer(applications, many=True)
+        serializer = serializers.AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
 
 
@@ -208,5 +206,5 @@ class AdminUserActiveApplication(AdminMixin):
         if application is None:
             return Response({"message": f"User {slug} does not have active application."},
                             status=status.HTTP_204_NO_CONTENT)
-        serializer = serializers.ApplicationSerializer(application)
+        serializer = serializers.AdminApplicationSerializer(application)
         return Response(serializer.data)

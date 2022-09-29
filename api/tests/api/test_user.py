@@ -76,13 +76,8 @@ def test_get_active_application(user_client, value):
 
 
 @pytest.mark.django_db
-def test_cancel_application(user_client, value):
-    response = user_client.get("/me/active/")
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-
-    _ = user_client.post("/me/applications/", {"value": value})
-
-    response = user_client.post("/me/cancel/")
+def test_cancel_application(user_client_with_application, value):
+    response = user_client_with_application.post("/me/cancel/")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
@@ -90,3 +85,6 @@ def test_cancel_application(user_client, value):
     assert data['request_date']
     assert data['answer_date']
     assert not data['approved']
+
+    response = user_client_with_application.post("/me/cancel/")
+    assert response.status_code == status.HTTP_204_NO_CONTENT

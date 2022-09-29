@@ -67,6 +67,44 @@ def test_delete_application(admin_client):
 
 
 @pytest.mark.django_db
+def test_approve_application(admin_client):
+    response = admin_client.post("/applications/100/approve/")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    response = admin_client.post("/applications/1/approve/")
+    assert response.status_code == status.HTTP_200_OK
+
+    user = User.objects.get(is_superuser=False)
+    data = response.data
+    assert data['answer_date']
+    assert data['approved']
+    assert not data['is_admin']
+    assert data['value'] == user.debt
+
+    response = admin_client.post("/applications/1/approve/")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_decline_application(admin_client):
+    response = admin_client.post("/applications/100/decline/")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    response = admin_client.post("/applications/1/decline/")
+    assert response.status_code == status.HTTP_200_OK
+
+    user = User.objects.get(is_superuser=False)
+    data = response.data
+    assert data['answer_date']
+    assert not data['approved']
+    assert not data['is_admin']
+    assert user.debt == 0
+
+    response = admin_client.post("/applications/1/decline/")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
 def test_get_user_list(admin_client):
     response = admin_client.get("/users/")
     assert response.status_code == status.HTTP_200_OK

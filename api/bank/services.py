@@ -45,7 +45,11 @@ def get_user_by_slug(slug):
 
 
 def change_user_debt(application: OrderedDict) -> None:
-    user = User.objects.get(id=application['user'].id)
+    # TODO fix
+    if isinstance(application['user'], User):
+        user = User.objects.get(id=application['user'].id)
+    else:
+        user = User.objects.get(id=application['user'])
     user.debt += application['value']
     user.save()
 
