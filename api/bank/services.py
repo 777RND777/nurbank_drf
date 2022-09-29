@@ -37,12 +37,6 @@ def create_user(user_dc: UserDataClass) -> UserDataClass:
     return UserDataClass.from_instance(user)
 
 
-def change_user_debt(application: OrderedDict) -> None:
-    user = User.objects.get(id=application['user'].id)
-    user.debt += application['value']
-    user.save()
-
-
 def get_user_by_slug(slug):
     try:
         return User.objects.get(slug=slug)
@@ -50,11 +44,23 @@ def get_user_by_slug(slug):
         raise Http404
 
 
+def change_user_debt(application: OrderedDict) -> None:
+    user = User.objects.get(id=application['user'].id)
+    user.debt += application['value']
+    user.save()
+
+
 def get_application_by_pk(pk):
     try:
         return Application.objects.get(pk=pk)
     except Application.DoesNotExist:
         raise Http404
+
+
+def approve_application(application: Application):
+    application.approved = True
+    set_answer_date(application)
+    application.save()
 
 
 def set_answer_date(application: Application):

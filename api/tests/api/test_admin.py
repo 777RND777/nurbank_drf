@@ -12,7 +12,7 @@ def test_admin_url(user_client):
 
 
 @pytest.mark.django_db
-def test_create_application(admin_client, user_payload, value):
+def test_create_application(admin_client, value):
     user_id = User.objects.get(is_superuser=False).id
 
     response = admin_client.post("/applications/", {})
@@ -42,7 +42,7 @@ def test_create_application(admin_client, user_payload, value):
 
 
 @pytest.mark.django_db
-def test_get_application(admin_client, user_payload, value):
+def test_get_application(admin_client, value):
     response = admin_client.get("/applications/100/")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -121,13 +121,30 @@ def test_delete_user(admin_client, user_payload):
 
 @pytest.mark.django_db
 def test_get_user_application_list(admin_client, user_payload, value):
-    response = admin_client.get("/applications/")
+    response = admin_client.get(f"/users/unregistered_user/applications/")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    response = admin_client.get(f"/users/{user_payload['username']}/applications/")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data) == 1
 
     user_id = User.objects.get(is_superuser=False).id
     _ = admin_client.post("/applications/", {"value": value, "user": user_id})
 
-    response = admin_client.get("/applications/")
+    response = admin_client.get(f"/users/{user_payload['username']}/applications/")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data) == 2
+
+
+@pytest.mark.django_db
+def test_get_user_active_application(admin_client, user_payload):
+    response = admin_client.get(f"/users/unregistered_user/active/")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    response = admin_client.get(f"/users/{user_payload['username']}/active/")
+    assert response.status_code == status.HTTP_200_OK
+
+    _ = admin_client.delete(f"/applications/1/")
+
+    response = admin_client.get(f"/users/{user_payload['username']}/active/")
+    assert response.status_code == status.HTTP_204_NO_CONTENT

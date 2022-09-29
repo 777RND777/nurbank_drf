@@ -14,6 +14,8 @@ urlpatterns = [
     path('applications/', apis.AdminApplicationList.as_view()),
     path('applications/active/', apis.AdminActiveApplicationList.as_view()),
     path('applications/<int:pk>/', apis.AdminApplicationDetail.as_view()),
+    path('applications/<int:pk>/approve/', apis.AdminApplicationApprove.as_view()),
+    path('applications/<int:pk>/decline/', apis.AdminApplicationDecline.as_view()),
 
     path('users/', apis.AdminUserList.as_view()),
     path('users/<slug:slug>/', apis.AdminUserDetail.as_view()),

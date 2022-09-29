@@ -134,6 +134,35 @@ class AdminApplicationDetail(AdminMixin):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class AdminApplicationApprove(AdminMixin):
+    # TODO add tests
+    @staticmethod
+    def post(request, slug):
+        application = services.get_user_by_slug(slug).applications.filter(answer_date=None).first()
+        if application is None:
+            return Response({"message": f"User {slug} does not have active application."},
+                            status=status.HTTP_204_NO_CONTENT)
+        services.approve_application(application)
+        serializer = serializers.ApplicationSerializer()
+        serializer.instance = application
+        services.change_user_debt(serializer.validated_data)
+        return Response(serializer.data)
+
+
+class AdminApplicationDecline(AdminMixin):
+    # TODO add tests
+    @staticmethod
+    def post(request, slug):
+        application = services.get_user_by_slug(slug).applications.filter(answer_date=None).first()
+        if application is None:
+            return Response({"message": f"User {slug} does not have active application."},
+                            status=status.HTTP_204_NO_CONTENT)
+        services.set_answer_date(application)
+        serializer = serializers.ApplicationSerializer()
+        serializer.instance = application
+        return Response(serializer.data)
+
+
 class AdminUserList(AdminMixin):
     @staticmethod
     def get(request):
@@ -173,10 +202,11 @@ class AdminUserApplicationList(AdminMixin):
 
 
 class AdminUserActiveApplication(AdminMixin):
-    # TODO add tests
-    #  better test with application functionality
     @staticmethod
     def get(request, slug):
-        applications = services.get_user_by_slug(slug).applications.filter(answer_date=None)
-        serializer = serializers.ApplicationSerializer(applications, many=True)
+        application = services.get_user_by_slug(slug).applications.filter(answer_date=None).first()
+        if application is None:
+            return Response({"message": f"User {slug} does not have active application."},
+                            status=status.HTTP_204_NO_CONTENT)
+        serializer = serializers.ApplicationSerializer(application)
         return Response(serializer.data)
