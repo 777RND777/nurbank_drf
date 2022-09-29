@@ -24,6 +24,9 @@ def test_register(client, user_payload):
     assert data['last_name'] == user_payload['last_name']
     assert "password" not in data
 
+    response = client.post("/register/", user_payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
 
 @pytest.mark.django_db
 def test_login(client, user_payload):

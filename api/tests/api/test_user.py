@@ -38,8 +38,9 @@ def test_create_application(user_client, value):
     data = response.data
     assert data['value'] == value
     assert "request_date" in data
-    # TODO add creating new application with failure
-    #  because there can be only one active application for each user
+
+    response = user_client.post("/me/applications/", {"value": value})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db

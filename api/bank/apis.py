@@ -56,6 +56,9 @@ class ApplicationList(AuthMixin):
     def post(self, request):
         serializer = serializers.ApplicationCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        if self.request.user.applications.filter(answer_date=None).first():
+            return Response({"message": "You already have active application."}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer.save(user=self.request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
