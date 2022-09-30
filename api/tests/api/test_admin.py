@@ -42,17 +42,15 @@ def test_create_application(admin_client, value):
 
 
 @pytest.mark.django_db
-def test_get_application_list(admin_client_users, admin_payload, user_payload, value, n):
+def test_get_application_list(admin_client_users, value, n):
     response = admin_client_users.get("/applications/")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
     assert len(data) == n
 
-    _ = admin_client_users.post('/applications/1/decline/')
-    _ = admin_client_users.post("/login/", user_payload)
-    _ = admin_client_users.post("/me/applications/", {"value": value})
-    _ = admin_client_users.post("/login/", admin_payload)
+    user_id = User.objects.filter(is_superuser=False).first().id
+    _ = admin_client_users.post("/applications/", {"value": value, "user": user_id})
 
     response = admin_client_users.get("/applications/")
     assert len(response.data) == n + 1
@@ -93,7 +91,7 @@ def test_delete_application(admin_client):
     response = admin_client.delete("/applications/1/")
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    response = admin_client.get("/applications/1/")
+    response = admin_client.delete("/applications/1/")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -105,12 +103,11 @@ def test_approve_application(admin_client):
     response = admin_client.post("/applications/1/approve/")
     assert response.status_code == status.HTTP_200_OK
 
-    user = User.objects.get(is_superuser=False)
     data = response.data
     assert data['answer_date']
     assert data['approved']
     assert not data['is_admin']
-    assert data['value'] == user.debt
+    assert data['value'] == User.objects.get(is_superuser=False).debt
 
     response = admin_client.post("/applications/1/approve/")
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -124,12 +121,11 @@ def test_decline_application(admin_client):
     response = admin_client.post("/applications/1/decline/")
     assert response.status_code == status.HTTP_200_OK
 
-    user = User.objects.get(is_superuser=False)
     data = response.data
     assert data['answer_date']
     assert not data['approved']
     assert not data['is_admin']
-    assert user.debt == 0
+    assert User.objects.get(is_superuser=False).debt == 0
 
     response = admin_client.post("/applications/1/decline/")
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -159,7 +155,7 @@ def test_get_user(admin_client, user_payload):
 
 
 @pytest.mark.django_db
-def test_patch_user(admin_client, user_payload, user_change_payload):
+def test_update_user(admin_client, user_payload, user_change_payload):
     response = admin_client.patch(f"/users/unregistered_user/", user_change_payload)
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -170,10 +166,7 @@ def test_patch_user(admin_client, user_payload, user_change_payload):
     assert data['first_name'] == user_change_payload['first_name']
     assert data['last_name'] == user_change_payload['last_name']
     assert data['debt'] == user_change_payload['debt']
-    assert data['username'] == f"{user_payload['username']}"
-
-    response = admin_client.post("/login/", user_payload)
-    assert response.status_code == status.HTTP_200_OK
+    assert data['username'] == user_payload['username']
 
 
 @pytest.mark.django_db
@@ -184,7 +177,7 @@ def test_delete_user(admin_client, user_payload):
     response = admin_client.delete(f"/users/{user_payload['username']}/")
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    response = admin_client.get(f"/users/{user_payload['username']}/")
+    response = admin_client.delete(f"/users/{user_payload['username']}/")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -213,7 +206,7 @@ def test_get_user_active_application(admin_client, user_payload):
     response = admin_client.get(f"/users/{user_payload['username']}/active/")
     assert response.status_code == status.HTTP_200_OK
 
-    _ = admin_client.delete(f"/applications/1/")
+    _ = admin_client.post(f"/applications/1/decline/")
 
     response = admin_client.get(f"/users/{user_payload['username']}/active/")
     assert response.status_code == status.HTTP_204_NO_CONTENT

@@ -43,7 +43,8 @@ def user_change_payload():
 @pytest.fixture
 def user_client(client, user_payload):
     _ = client.post("/register/", user_payload)
-    _ = client.post("/login/", user_payload)
+    token = client.post("/token/", user_payload).data['access']
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return client
 
 
@@ -64,7 +65,8 @@ def admin_payload():
 @pytest.fixture
 def admin_client(user_client_with_application, admin_payload):
     _ = User.objects.create_superuser(**admin_payload)
-    _ = user_client_with_application.post("/login/", admin_payload)
+    token = user_client_with_application.post("/token/", admin_payload).data['access']
+    user_client_with_application.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return user_client_with_application
 
 
@@ -73,7 +75,10 @@ def admin_client_users(admin_client, admin_payload, user_payload, value, n):
     for i in range(1, n):
         user_payload_current = {**user_payload, "username": f"test_user{i}"}
         User.objects.create_user(**user_payload_current)
-        _ = admin_client.post('/login/', user_payload_current)
-        _ = admin_client.post('/me/applications/', {"value": value})
-    _ = admin_client.post("/login/", admin_payload)
+        token = admin_client.post("/token/", user_payload_current).data['access']
+        admin_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+        _ = admin_client.post("/me/applications/", {"value": value})
+
+    token = admin_client.post("/token/", admin_payload).data['access']
+    admin_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return admin_client

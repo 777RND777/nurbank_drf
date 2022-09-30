@@ -29,22 +29,27 @@ def test_register(client, user_payload):
 
 
 @pytest.mark.django_db
-def test_login(client, user_payload):
+def test_get_token(client, user_payload):
     _ = client.post("/register/", user_payload)
-    response = client.post("/login/", {"username": user_payload['username']})
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-    response = client.post("/login/", {"password": user_payload['password']})
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-    response = client.post("/login/", {"username": "incorrect_username", "password": user_payload['password']})
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    response = client.post("/token/", {"username": user_payload['username']})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response = client.post("/token/", {"password": user_payload['password']})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response = client.post("/token/", {"username": "incorrect_username", "password": user_payload['password']})
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    response = client.post("/login/", user_payload)
+    response = client.post("/token/", user_payload)
     assert response.status_code == status.HTTP_200_OK
-    assert "token" in response.data
+    assert "access" in response.data
 
 
 @pytest.mark.django_db
-def test_auth_required_url(client, user_payload):
+def test_use_token(client, user_payload):
     _ = client.post("/register/", user_payload)
     response = client.get("/me/")
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    token = client.post("/token/", user_payload).data['access']
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+    response = client.get("/me/")
+    assert response.status_code == status.HTTP_200_OK
