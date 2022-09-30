@@ -2,10 +2,8 @@ import dataclasses
 import datetime
 from collections import OrderedDict
 
-from django.conf import settings
 from django.http import Http404
 from django.utils.text import slugify
-import jwt
 
 from .models import Application, User
 
@@ -70,13 +68,3 @@ def approve_application(application: Application):
 def set_answer_date(application: Application):
     application.answer_date = datetime.datetime.now()
     application.save()
-
-
-def create_token(user_id: int) -> str:
-    payload = dict(
-        id=user_id,
-        exp=datetime.datetime.utcnow() + datetime.timedelta(hours=24),
-        iat=datetime.datetime.utcnow(),
-    )
-    token = jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
-    return token
