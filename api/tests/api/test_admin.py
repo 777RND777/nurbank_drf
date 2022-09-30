@@ -2,7 +2,7 @@ import pytest
 from django.conf import settings
 from rest_framework import status
 
-from bank.models import User
+from users.models import User
 
 
 @pytest.mark.django_db

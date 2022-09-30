@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.test import APIClient
 
-from bank.models import User
+from users.models import User
 
 
 @pytest.fixture

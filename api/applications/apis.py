@@ -1,40 +1,12 @@
 from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from . import serializers, services
-from .models import Application, User
+from .models import Application
+from users import apis as user_apis, services as user_services
 
 
-@api_view(['POST'])
-def register_view(request):
-    serializer = serializers.RegistrationSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-
-    data = serializer.validated_data
-    serializer.instance = services.create_user(user_dc=data)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class AuthMixin(APIView):
-    permission_classes = (IsAuthenticated,)
-
-
-class UserDetail(AuthMixin):
-    def get(self, request):
-        serializer = serializers.UserSerializer(self.request.user)
-        return Response(serializer.data)
-
-    def patch(self, request):
-        serializer = serializers.UserChangeSerializer(self.request.user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-
-class ApplicationList(AuthMixin):
+class ApplicationList(user_apis.AuthMixin):
     def post(self, request):
         serializer = serializers.ApplicationCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -49,7 +21,7 @@ class ApplicationList(AuthMixin):
         return Response(serializer.data)
 
 
-class ApplicationActive(AuthMixin):
+class ApplicationActive(user_apis.AuthMixin):
     def get(self, request):
         application = self.request.user.applications.filter(answer_date=None).first()
         if application is None:
@@ -58,7 +30,7 @@ class ApplicationActive(AuthMixin):
         return Response(serializer.data)
 
 
-class ApplicationCancel(AuthMixin):
+class ApplicationCancel(user_apis.AuthMixin):
     def post(self, request):
         application = self.request.user.applications.filter(answer_date=None).first()
         if application is None:
@@ -69,11 +41,7 @@ class ApplicationCancel(AuthMixin):
         return Response(serializer.data)
 
 
-class AdminMixin(APIView):
-    permission_classes = (IsAdminUser,)
-
-
-class AdminApplicationList(AdminMixin):
+class AdminApplicationList(user_apis.AdminMixin):
     @staticmethod
     def post(request):
         serializer = serializers.AdminApplicationCreateSerializer(data=request.data)
@@ -89,7 +57,7 @@ class AdminApplicationList(AdminMixin):
         return Response(serializer.data)
 
 
-class AdminActiveApplicationList(AdminMixin):
+class AdminActiveApplicationList(user_apis.AdminMixin):
     @staticmethod
     def get(request):
         applications = Application.objects.filter(answer_date=None)
@@ -97,7 +65,7 @@ class AdminActiveApplicationList(AdminMixin):
         return Response(serializer.data)
 
 
-class AdminApplicationDetail(AdminMixin):
+class AdminApplicationDetail(user_apis.AdminMixin):
     @staticmethod
     def get(request, pk):
         application = services.get_application_by_pk(pk)
@@ -111,7 +79,7 @@ class AdminApplicationDetail(AdminMixin):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class AdminApplicationApprove(AdminMixin):
+class AdminApplicationApprove(user_apis.AdminMixin):
     @staticmethod
     def post(request, pk):
         application = services.get_application_by_pk(pk)
@@ -125,7 +93,7 @@ class AdminApplicationApprove(AdminMixin):
         return Response(serializer.data)
 
 
-class AdminApplicationDecline(AdminMixin):
+class AdminApplicationDecline(user_apis.AdminMixin):
     @staticmethod
     def post(request, pk):
         application = services.get_application_by_pk(pk)
@@ -138,48 +106,18 @@ class AdminApplicationDecline(AdminMixin):
         return Response(serializer.data)
 
 
-class AdminUserList(AdminMixin):
-    @staticmethod
-    def get(request):
-        user = User.objects.all().order_by('-date_joined')
-        serializer = serializers.AdminUserSerializer(user, many=True)
-        return Response(serializer.data)
-
-
-class AdminUserDetail(AdminMixin):
+class AdminUserApplicationList(user_apis.AdminMixin):
     @staticmethod
     def get(request, slug):
-        user = services.get_user_by_slug(slug)
-        serializer = serializers.AdminUserSerializer(user)
-        return Response(serializer.data)
-
-    @staticmethod
-    def patch(request, slug):
-        user = services.get_user_by_slug(slug)
-        serializer = serializers.AdminUserSerializer(user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-    @staticmethod
-    def delete(request, slug):
-        user = services.get_user_by_slug(slug)
-        user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class AdminUserApplicationList(AdminMixin):
-    @staticmethod
-    def get(request, slug):
-        applications = services.get_user_by_slug(slug).applications
+        applications = user_services.get_user_by_slug(slug).applications
         serializer = serializers.AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
 
 
-class AdminUserActiveApplication(AdminMixin):
+class AdminUserActiveApplication(user_apis.AdminMixin):
     @staticmethod
     def get(request, slug):
-        application = services.get_user_by_slug(slug).applications.filter(answer_date=None).first()
+        application = user_services.get_user_by_slug(slug).applications.filter(answer_date=None).first()
         if application is None:
             return Response({"message": f"User {slug} does not have active application."},
                             status=status.HTTP_204_NO_CONTENT)
