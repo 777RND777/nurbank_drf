@@ -1,12 +1,10 @@
-from django.contrib.auth import authenticate
-from rest_framework import exceptions, response, status
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import serializers, services
-from .authentication import CustomUserAuthentication
 from .models import Application, User
 
 
@@ -20,23 +18,7 @@ def register_view(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-@api_view(['POST'])
-def login_view(request):
-    username = request.data.get("username")
-    password = request.data.get("password")
-    user = authenticate(username=username, password=password)
-    if user is None:
-        raise exceptions.AuthenticationFailed("Invalid Credentials")
-
-    token = services.create_token(user_id=user.id)
-    resp = response.Response()
-    resp.set_cookie(key="jwt", value=token, httponly=True)
-    resp.data = {"token": token}
-    return resp
-
-
 class AuthMixin(APIView):
-    authentication_classes = (CustomUserAuthentication,)
     permission_classes = (IsAuthenticated,)
 
 
@@ -88,7 +70,6 @@ class ApplicationCancel(AuthMixin):
 
 
 class AdminMixin(APIView):
-    authentication_classes = (CustomUserAuthentication,)
     permission_classes = (IsAdminUser,)
 
 
