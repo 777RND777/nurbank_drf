@@ -2,16 +2,16 @@
 NurBank is a fictional bank for loans.
 
 ## Normal run:
-1. Run migrations
+1. Run migrations.
     ```shell
     python api/manage.py migrate
     ```
-2. Run server
+2. Run server.
     ```shell
     python api/manage.py runserver
     ```
 
-## Run both with docker-compose.
+## Run using docker-compose.
 1. Run docker-compose.
     ```shell
     docker-compose up
