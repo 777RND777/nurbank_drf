@@ -14,7 +14,7 @@ def register_view(request):
     serializer.is_valid(raise_exception=True)
 
     data = serializer.validated_data
-    serializer.instance = services.create_user(user_dc=data)
+    serializer.instance = services.create_user(data)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
