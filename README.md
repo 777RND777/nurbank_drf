@@ -12,11 +12,15 @@ NurBank is a fictional bank for loans.
     ```
 
 ## Run using docker-compose.
-1. Run docker-compose.
+1. Create requirements.txt from pipenv.
+    ```shell
+    pipenv run pip freeze > requirements.txt
+    ```
+2. Run docker-compose.
     ```shell
     docker-compose up
     ```
-2. Exec into api container and run migrations.
+3. Exec into api container and run migrations.
     ```shell
     docker exec -it CONTAINER_ID /bin/bash
     python manage.py migrate
