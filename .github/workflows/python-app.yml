@@ -1,0 +1,28 @@
+name: Python application
+
+on:
+  push:
+    branches: [ "devel" ]
+  pull_request:
+    branches: [ "master", "devel" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --deploy --dev
+      - name: Test with pytest
+        run: pipenv run pytest api -v -p no:warnings
