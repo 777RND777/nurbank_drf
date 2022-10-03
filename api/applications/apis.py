@@ -47,7 +47,7 @@ class AdminApplicationList(user_apis.AdminMixin):
         serializer = serializers.AdminApplicationCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(approved=True, is_admin=True)
-        services.change_user_debt(serializer.validated_data)
+        services.change_user_debt(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @staticmethod
