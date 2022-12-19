@@ -1,6 +1,7 @@
 import datetime
 from collections import OrderedDict
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 
 from .models import Application
@@ -16,7 +17,7 @@ def change_user_debt(application: OrderedDict) -> None:
 def get_application_by_pk(pk):
     try:
         return Application.objects.get(pk=pk)
-    except Application.DoesNotExist:
+    except ObjectDoesNotExist:
         raise Http404
 
 

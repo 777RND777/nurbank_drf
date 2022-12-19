@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 
 from .models import User
@@ -11,5 +12,5 @@ def create_user(data):
 def get_user_by_slug(slug):
     try:
         return User.objects.get(slug=slug)
-    except User.DoesNotExist:
+    except ObjectDoesNotExist:
         raise Http404

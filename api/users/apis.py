@@ -23,12 +23,14 @@ class AuthMixin(APIView):
 
 
 class UserDetail(AuthMixin):
-    def get(self, request):
-        serializer = serializers.UserSerializer(self.request.user)
+    @staticmethod
+    def get(request):
+        serializer = serializers.UserSerializer(request.user)
         return Response(serializer.data)
 
-    def patch(self, request):
-        serializer = serializers.UserChangeSerializer(self.request.user, data=request.data, partial=True)
+    @staticmethod
+    def patch(request):
+        serializer = serializers.UserChangeSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -40,7 +42,7 @@ class AdminMixin(APIView):
 
 class AdminUserList(AdminMixin):
     @staticmethod
-    def get(request):
+    def get(_):
         user = User.objects.all().order_by('-date_joined')
         serializer = serializers.AdminUserSerializer(user, many=True)
         return Response(serializer.data)
@@ -48,7 +50,7 @@ class AdminUserList(AdminMixin):
 
 class AdminUserDetail(AdminMixin):
     @staticmethod
-    def get(request, slug):
+    def get(_, slug):
         user = services.get_user_by_slug(slug)
         serializer = serializers.AdminUserSerializer(user)
         return Response(serializer.data)
@@ -62,7 +64,7 @@ class AdminUserDetail(AdminMixin):
         return Response(serializer.data)
 
     @staticmethod
-    def delete(request, slug):
+    def delete(_, slug):
         user = services.get_user_by_slug(slug)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -7,23 +7,26 @@ from users import apis as user_apis, services as user_services
 
 
 class ApplicationList(user_apis.AuthMixin):
-    def post(self, request):
+    @staticmethod
+    def post(request):
         serializer = serializers.ApplicationCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if self.request.user.applications.filter(answer_date=None).first():
+        if request.user.applications.filter(answer_date=None).first():
             return Response({"message": "You already have active application."}, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save(user=self.request.user)
+        serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def get(self, request):
-        applications = self.request.user.applications
+    @staticmethod
+    def get(request):
+        applications = request.user.applications
         serializer = serializers.ApplicationSerializer(applications, many=True)
         return Response(serializer.data)
 
 
 class ApplicationActive(user_apis.AuthMixin):
-    def get(self, request):
-        application = self.request.user.applications.filter(answer_date=None).first()
+    @staticmethod
+    def get(request):
+        application = request.user.applications.filter(answer_date=None).first()
         if application is None:
             return Response({"message": "You do not have active application."}, status=status.HTTP_204_NO_CONTENT)
         serializer = serializers.ApplicationSerializer(application)
@@ -31,8 +34,9 @@ class ApplicationActive(user_apis.AuthMixin):
 
 
 class ApplicationCancel(user_apis.AuthMixin):
-    def post(self, request):
-        application = self.request.user.applications.filter(answer_date=None).first()
+    @staticmethod
+    def post(request):
+        application = request.user.applications.filter(answer_date=None).first()
         if application is None:
             return Response({"message": "You do not have active application."}, status=status.HTTP_204_NO_CONTENT)
         services.set_answer_date(application)
@@ -51,7 +55,7 @@ class AdminApplicationList(user_apis.AdminMixin):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @staticmethod
-    def get(request):
+    def get(_):
         applications = Application.objects.all()
         serializer = serializers.AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
@@ -59,7 +63,7 @@ class AdminApplicationList(user_apis.AdminMixin):
 
 class AdminActiveApplicationList(user_apis.AdminMixin):
     @staticmethod
-    def get(request):
+    def get(_):
         applications = Application.objects.filter(answer_date=None)
         serializer = serializers.AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
@@ -67,13 +71,13 @@ class AdminActiveApplicationList(user_apis.AdminMixin):
 
 class AdminApplicationDetail(user_apis.AdminMixin):
     @staticmethod
-    def get(request, pk):
+    def get(_, pk):
         application = services.get_application_by_pk(pk)
         serializer = serializers.AdminApplicationSerializer(application)
         return Response(serializer.data)
 
     @staticmethod
-    def delete(request, pk):
+    def delete(_, pk):
         application = services.get_application_by_pk(pk)
         application.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -81,7 +85,7 @@ class AdminApplicationDetail(user_apis.AdminMixin):
 
 class AdminApplicationApprove(user_apis.AdminMixin):
     @staticmethod
-    def post(request, pk):
+    def post(_, pk):
         application = services.get_application_by_pk(pk)
         if application.answer_date:
             return Response({"message": f"Application is not active."},
@@ -95,7 +99,7 @@ class AdminApplicationApprove(user_apis.AdminMixin):
 
 class AdminApplicationDecline(user_apis.AdminMixin):
     @staticmethod
-    def post(request, pk):
+    def post(_, pk):
         application = services.get_application_by_pk(pk)
         if application.answer_date:
             return Response({"message": f"Application is not active."},
@@ -108,7 +112,7 @@ class AdminApplicationDecline(user_apis.AdminMixin):
 
 class AdminUserApplicationList(user_apis.AdminMixin):
     @staticmethod
-    def get(request, slug):
+    def get(_, slug):
         applications = user_services.get_user_by_slug(slug).applications
         serializer = serializers.AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
@@ -116,7 +120,7 @@ class AdminUserApplicationList(user_apis.AdminMixin):
 
 class AdminUserActiveApplication(user_apis.AdminMixin):
     @staticmethod
-    def get(request, slug):
+    def get(_, slug):
         application = user_services.get_user_by_slug(slug).applications.filter(answer_date=None).first()
         if application is None:
             return Response({"message": f"User {slug} does not have active application."},
