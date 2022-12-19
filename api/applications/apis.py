@@ -9,10 +9,10 @@ from users import apis as user_apis, services as user_services
 class ApplicationList(user_apis.AuthMixin):
     @staticmethod
     def post(request):
-        serializer = serializers.ApplicationCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
         if request.user.applications.filter(answer_date=None).first():
             return Response({"message": "You already have active application."}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.ApplicationCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
