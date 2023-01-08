@@ -11,8 +11,11 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 import os
+import socket
 from datetime import timedelta
 from pathlib import Path
+
+import decouple
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,9 +27,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-c%%$-b7m!#id#e^sphm_po%#s&lf30eh_&(upcsgpyd5z+bh4h'
 JWT_SECRET = 'nurbankisbadforme'
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = decouple.config('DEBUG', default=0)
 
 ALLOWED_HOSTS = []
+
+INTERNAL_IPS = ['127.0.0.1']
+ip = socket.gethostbyname(socket.gethostname())
+INTERNAL_IPS.append(ip[:-1] + '1')
 
 # Application definition
 
@@ -38,6 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'debug_toolbar',
+    'django_celery_beat',
+    'django_celery_results',
     'rest_framework',
     'rest_framework_simplejwt',
 
@@ -53,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'nurbank_drf.urls'
@@ -82,7 +93,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = 'nurbank_drf.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
@@ -97,6 +108,12 @@ DATABASES = {
         'PORT': os.environ.get('SQL_PORT', '5432'),
     }
 }
+
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_BROKER_URL = decouple.config('CELERY_BROKER_REDIS_URL', default='redis://localhost:6379')
+# this allows you to schedule items in the Django admin.
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+CACHE_TTL = 60 * 15
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

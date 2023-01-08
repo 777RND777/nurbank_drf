@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from . import serializers, services
 from .models import Application
-from users import apis as user_apis, models as user_models
+from users import views as user_apis, models as user_models
 
 
 class ApplicationList(user_apis.AuthMixin):
