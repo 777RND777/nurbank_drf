@@ -4,7 +4,7 @@ from rest_framework import status
 
 @pytest.mark.django_db
 def test_get_user(user_client, user_payload):
-    response = user_client.get('/me/')
+    response = user_client.get('/me')
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
@@ -16,7 +16,7 @@ def test_get_user(user_client, user_payload):
 
 @pytest.mark.django_db
 def test_update_user(user_client, user_payload, user_change_payload):
-    response = user_client.patch('/me/', user_change_payload)
+    response = user_client.patch('/me', user_change_payload)
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
@@ -29,23 +29,23 @@ def test_update_user(user_client, user_payload, user_change_payload):
 
 @pytest.mark.django_db
 def test_create_application(user_client, value):
-    response = user_client.post('/me/applications/', {})
+    response = user_client.post('/me/applications', {})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    response = user_client.post('/me/applications/', {'value': value})
+    response = user_client.post('/me/applications', {'value': value})
     assert response.status_code == status.HTTP_201_CREATED
 
     data = response.data
     assert data['value'] == value
     assert data['request_date']
 
-    response = user_client.post('/me/applications/', {'value': value})
+    response = user_client.post('/me/applications', {'value': value})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
 def test_get_application_list(user_client_with_application, value):
-    response = user_client_with_application.get('/me/applications/')
+    response = user_client_with_application.get('/me/applications')
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
@@ -60,12 +60,12 @@ def test_get_application_list(user_client_with_application, value):
 
 @pytest.mark.django_db
 def test_get_active_application(user_client, value):
-    response = user_client.get('/me/active/')
+    response = user_client.get('/me/active')
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    _ = user_client.post('/me/applications/', {'value': value})
+    _ = user_client.post('/me/applications', {'value': value})
 
-    response = user_client.get('/me/active/')
+    response = user_client.get('/me/active')
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
@@ -77,7 +77,7 @@ def test_get_active_application(user_client, value):
 
 @pytest.mark.django_db
 def test_cancel_application(user_client_with_application, value):
-    response = user_client_with_application.post('/me/cancel/')
+    response = user_client_with_application.post('/me/cancel')
     assert response.status_code == status.HTTP_200_OK
 
     data = response.data
@@ -86,5 +86,5 @@ def test_cancel_application(user_client_with_application, value):
     assert data['answer_date']
     assert not data['approved']
 
-    response = user_client_with_application.post('/me/cancel/')
+    response = user_client_with_application.post('/me/cancel')
     assert response.status_code == status.HTTP_204_NO_CONTENT

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from . import serializers, services
 from .models import Application
-from users import apis as user_apis
+from users import apis as user_apis, models as user_models
 
 
 class ApplicationList(user_apis.AuthMixin):
@@ -114,6 +114,7 @@ class AdminApplicationDecline(user_apis.AdminMixin):
 class AdminUserApplicationList(user_apis.AdminMixin):
     @staticmethod
     def get(_, slug):
+        _ = get_object_or_404(user_models.User, slug=slug)
         applications = Application.objects.filter(user__slug=slug)
         serializer = serializers.AdminApplicationSerializer(applications, many=True)
         return Response(serializer.data)
@@ -122,6 +123,7 @@ class AdminUserApplicationList(user_apis.AdminMixin):
 class AdminUserActiveApplication(user_apis.AdminMixin):
     @staticmethod
     def get(_, slug):
+        _ = get_object_or_404(user_models.User, slug=slug)
         application = Application.objects.filter(user__slug=slug, answer_date=None).first()
         if application is None:
             return Response({'message': f'User {slug} does not have active application.'},
