@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -51,13 +52,13 @@ class AdminUserList(AdminMixin):
 class AdminUserDetail(AdminMixin):
     @staticmethod
     def get(_, slug):
-        user = services.get_user_by_slug(slug)
+        user = get_object_or_404(User, slug=slug)
         serializer = serializers.AdminUserSerializer(user)
         return Response(serializer.data)
 
     @staticmethod
     def patch(request, slug):
-        user = services.get_user_by_slug(slug)
+        user = get_object_or_404(User, slug=slug)
         serializer = serializers.AdminUserSerializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -65,6 +66,6 @@ class AdminUserDetail(AdminMixin):
 
     @staticmethod
     def delete(_, slug):
-        user = services.get_user_by_slug(slug)
+        user = get_object_or_404(User, slug=slug)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

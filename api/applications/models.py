@@ -12,10 +12,10 @@ class Application(models.Model):
     approved = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="applications")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applications')
 
     def __str__(self):
         return str(self.pk)
 
     class Meta:
-        ordering = ["-pk"]
+        ordering = ['-pk']
